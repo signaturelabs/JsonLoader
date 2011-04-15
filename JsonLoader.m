@@ -60,6 +60,9 @@
 			if(![self.delegate willShowError:self error:errorStr json:json])
 				return;
 		
+		/* this should be disabled by default, but a developer could enable these types of debug alerts by setting a #define 
+		   disabling until we have that in place.
+		 
 		UIAlertView *alert =
 		[[UIAlertView alloc] 
 		 initWithTitle:@"Issue"
@@ -70,6 +73,8 @@
 		
 		[alert show];
 		[alert release];
+		*/
+		
 	}
 }
 
