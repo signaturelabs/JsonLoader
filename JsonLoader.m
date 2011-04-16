@@ -27,11 +27,11 @@
 	
 	if(self = [super init]) {
 		
+		self.delegate = del;
+		
 		if ([Util isNotEmpty:request.URL]) {
 		
 			DLog(@"jsonloader.initWithRequest called with url: %@", request.URL);
-			
-			self.delegate = del;
 			
 			self.connection = [NSURLConnection
 							   connectionWithRequest:request
