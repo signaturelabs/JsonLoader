@@ -135,12 +135,10 @@
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
-	
 	NSString *str = [[[NSString alloc]
 					  initWithData:self.requestData
 					  encoding:NSUTF8StringEncoding]
 					 autorelease];
-	
 	[self doneLoading:str];
 	
 	self.connection = nil;
