@@ -1,19 +1,28 @@
 //
 //  JsonLoader.m
-//  GeoPhoto
+//  associate.ipad
 //
-//  Created by Dustin Dettmer on 12/18/10.
-//  Copyright 2010 __MyCompanyName__. All rights reserved.
+//  Created by Dustin Dettmer on 5/3/11.
+//  Copyright 2011 __MyCompanyName__. All rights reserved.
 //
 
 #import "JsonLoader.h"
+#import "JsonLoaderInternal.h"
+#import "JsonCache.h"
 #import "CJSONDeserializer.h"
-#import "Util.h"
+
+#define REFRESH_TIMEOUT (60 * 60 * 24)
+
 
 @interface JsonLoader ()
 
-@property (nonatomic, retain) NSURLConnection *connection;
-@property (nonatomic, retain) NSMutableData *requestData;
+@property (nonatomic, retain) JsonLoaderInternal *jsonLoaderInteral;
+
+@property (nonatomic, retain) NSURL *url;
+
+@property (nonatomic, assign) BOOL updateCache;
+
+- (void)didFinishLoading:(NSData*)jsonData;
 
 @end
 
@@ -21,159 +30,121 @@
 @implementation JsonLoader
 
 @synthesize delegate;
-@synthesize connection, requestData;
+@synthesize jsonLoaderInteral, url, updateCache;
 
-- (id)initWithRequest:(NSURLRequest *)request delegate:(id)del {
+- (id)initWithRequest:(NSURLRequest*)request delegate:(id)del {
 	
 	if(self = [super init]) {
 		
 		self.delegate = del;
 		
-		if ([Util isNotEmpty:request.URL]) {
-		
-			DLog(@"jsonloader.initWithRequest called with url: %@", request.URL);
-			
-			self.connection = [NSURLConnection
-							   connectionWithRequest:request
-							   delegate:self];
-			
-		}
-		else {
-			
-			DLog(@"jsonloader.initWithRequest called with empty url");
-						
-			if([self.delegate respondsToSelector:@selector(jsonFailed:)])
-				[self.delegate jsonFailed:self];
-			
-		}
-		
+		self.jsonLoaderInteral =
+		[[JsonLoaderInternal alloc] initWithRequest:request delegate:self];
+		[self.jsonLoaderInteral release];
 	}
 	
 	return self;
 }
 
-- (void)showError:(NSString*)errorStr json:(NSString*)json {
+- (id)initWithCacheRequest:(NSURLRequest*)request delegate:(id)del {
 	
-	if(errorStr) {
+	if(self = [super init]) {
 		
-		if([self.delegate respondsToSelector:@selector(willShowError:error:json:)])
-			if(![self.delegate willShowError:self error:errorStr json:json])
-				return;
+		self.delegate = del;
 		
-		/* this should be disabled by default, but a developer could enable these types of debug alerts by setting a #define 
-		   disabling until we have that in place.
-		 
-		UIAlertView *alert =
-		[[UIAlertView alloc] 
-		 initWithTitle:@"Issue"
-		 message:errorStr
-		 delegate:nil
-		 cancelButtonTitle:@"Alright"
-		 otherButtonTitles:nil];
+		NSTimeInterval age = 0;
 		
-		[alert show];
-		[alert release];
-		*/
+		self.url = request.URL;
 		
-	}
-}
-
-- (void)doneLoading:(NSString*)json {
-	
-	NSData *jsonData = [json dataUsingEncoding:NSUTF32BigEndianStringEncoding];
-	NSDictionary *dictionary =
-	[[CJSONDeserializer deserializer]
-	 deserializeAsDictionary:jsonData
-	 error:nil];
-	
-	NSString *errorStr = nil;
-	
-	if(!errorStr)
-		errorStr = [dictionary objectForKey:@"error"];
-	
-	if(!errorStr && dictionary) {
+		NSData *data =
+		[[JsonCache shared] cacheDataForUrl:self.url getAge:&age];
 		
-		if([self.delegate respondsToSelector:@selector(jsonLoadedSuccessfully:json:)])
-			[self.delegate jsonLoadedSuccessfully:self json:dictionary];
-	}
-	else if(!errorStr) {
-		
-		NSError *error = nil;
-		
-		id jsonObject =
-		[[CJSONDeserializer deserializer]
-		 deserialize:jsonData
-		 error:&error];
-		
-		if(error || !jsonObject) {
+		if(data) {
 			
-			errorStr = [NSString stringWithFormat:@"Json validation error: %@", [error localizedDescription]];
+			[self didFinishLoading:data];
+			
+			if(age > REFRESH_TIMEOUT)
+				data = nil;
+			else
+				self.delegate = nil;
 		}
-		else if([self.delegate respondsToSelector:@selector(jsonLoadedSuccessfully:json:)]) {
+		
+		if(!data){
 			
-			[self.delegate jsonLoadedSuccessfully:self json:jsonObject];
+			self.updateCache = YES;
+			
+			self.jsonLoaderInteral =
+			[[JsonLoaderInternal alloc] initWithRequest:request delegate:self];
+			[self.jsonLoaderInteral release];
 		}
 	}
 	
-	if(errorStr) {
-		
-		[self showError:errorStr json:json];
-		
-		if([self.delegate respondsToSelector:@selector(jsonFailed:)])
-			[self.delegate jsonFailed:self];
-	}
-}
-
-- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
-	
-	self.requestData = [NSMutableData data];
-}
-
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
-	
-	[self.requestData appendData:data];
-}
-
-- (void)connectionDidFinishLoading:(NSURLConnection *)connection {
-	NSString *str = [[[NSString alloc]
-					  initWithData:self.requestData
-					  encoding:NSUTF8StringEncoding]
-					 autorelease];
-	[self doneLoading:str];
-	
-	self.connection = nil;
-	self.requestData = nil;
-}
-
-- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
-	
-	[self showError:[NSString stringWithFormat:@"Can't get internet.\n\n%@",
-					 [error localizedDescription]] json:nil];
-	
-	if([self.delegate respondsToSelector:@selector(jsonFailed:)])
-		[self.delegate jsonFailed:self];
-	
-	self.connection = nil;
-	self.requestData = nil;
+	return self;
 }
 
 - (void)cancel {
 	
-	[self.connection cancel];
-	self.connection = nil;
+	[self.jsonLoaderInteral cancel];
+}
+
+- (void)jsonLoadedSuccessfully:(id)dictionary {
+	
+	[self.delegate jsonLoadedSuccessfully:self json:dictionary];
+}
+
+- (BOOL)willShowError:(JsonLoader *)loader
+				error:(NSString *)error
+				 json:(NSString *)json {
+	
+	if([self.delegate respondsToSelector:@selector(willShowError:error:json:)])
+		return [self.delegate willShowError:self error:error json:json];
+	
+	return YES;
+}
+
+- (void)jsonFailed:(JsonLoader *)loader {
+	
+	if([self.delegate respondsToSelector:@selector(jsonFailed:)])
+		[self.delegate jsonFailed:self];
+}
+
+- (void)didFinishLoading:(NSData*)jsonData {
+	
+	if(self.updateCache)
+		[[JsonCache shared] setCacheData:jsonData forUrl:self.url];
+	
+	NSError *error = nil;
+	
+	NSDictionary *dictionary =
+	[[CJSONDeserializer deserializer]
+	 deserialize:jsonData
+	 error:&error];
+	
+	NSString *errorStr = nil;
+	
+	if(error)
+		errorStr = [NSString stringWithFormat:@"Json validation error: %@",
+					[error localizedDescription]];
+	
+	if(!errorStr && [dictionary isMemberOfClass:[NSDictionary class]])
+		errorStr = [dictionary objectForKey:@"error"];
+	
+	if(!errorStr && dictionary)
+		[self jsonLoadedSuccessfully:dictionary];
+	
+	else if([self willShowError:nil error:errorStr json:nil])
+		[self jsonFailed:nil];
 }
 
 - (void)dealloc {
 	
-	self.delegate = nil;
+	[self.jsonLoaderInteral cancel];
+	self.jsonLoaderInteral.delegate = nil;
+	self.jsonLoaderInteral = nil;
 	
-	[self cancel];
-	
-	self.connection = nil;
-	self.requestData = nil;
+	self.url = nil;
 	
 	[super dealloc];
 }
-
 
 @end
