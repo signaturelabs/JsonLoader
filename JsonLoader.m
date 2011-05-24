@@ -88,8 +88,9 @@
 }
 
 - (void)jsonLoadedSuccessfully:(id)dictionary {
-	
-	[self.delegate jsonLoadedSuccessfully:self json:dictionary];
+	if([self.delegate respondsToSelector:@selector(jsonLoadedSuccessfully:json:)]) {
+        [self.delegate jsonLoadedSuccessfully:self json:dictionary];
+    }
 }
 
 - (BOOL)willShowError:(JsonLoader *)loader
