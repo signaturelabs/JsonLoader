@@ -13,6 +13,8 @@
 
 + (id)shared;
 
+- (void)clearCache;
+
 - (NSData*)cacheDataForUrl:(NSURL*)url;
 - (NSData*)cacheDataForUrl:(NSURL*)url getAge:(NSTimeInterval*)age;
 

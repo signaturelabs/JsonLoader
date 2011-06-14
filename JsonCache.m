@@ -120,6 +120,30 @@
 	[formatter release];
 }
 
+- (void)clearCache {
+	
+	NSManagedObjectContext *moc = self.managedObjectContext;
+	
+	NSFetchRequest *request = [[[NSFetchRequest alloc] init] autorelease];
+	
+	request.entity =
+	[NSEntityDescription entityForName:@"CachedRequest"
+				inManagedObjectContext:moc];
+	
+	request.resultType = NSDictionaryResultType;
+	request.propertiesToFetch =
+	[NSArray arrayWithObjects:@"timestamp", @"url", nil];
+	
+	NSArray *array = [moc executeFetchRequest:request error:nil];
+	
+	for(NSDictionary *cachedRequest in array) {
+		
+        [self.managedObjectContext deleteObject:
+         [self getCachedRequestForUrlString:[cachedRequest objectForKey:@"url"]]];
+	}
+	
+}
+
 - (void)saveContext {
 	
 	[self cleanupExpired];
