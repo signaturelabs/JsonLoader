@@ -151,6 +151,9 @@
         [self.managedObjectContext deleteObject:
          [self getCachedRequestForUrlString:[cachedRequest objectForKey:@"url"]]];
 	}
+    
+    [self saveContext];
+
 	
 }
 
