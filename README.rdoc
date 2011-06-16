@@ -1,0 +1,26 @@
+= JsonLoader
+
+ObjectiveC library for loading JSON from Remote URL's and caching their contents for speedy subsequent loads
+
+== Features
+
+* Simple API
+* Caching via Core Data (sorry, no docs on that yet)
+
+== Dependencies
+
+* TouchJSON
+
+== Support environments
+
+* Tested on iOS 4.0+
+
+== Installation
+
+If using git, you can use submodule to integrate it into your project.
+
+Otherwise you can just copy in the files to your xcode project.
+
+== License
+
+MPL 1.1 -- See LICENSE file
