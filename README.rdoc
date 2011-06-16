@@ -1,10 +1,24 @@
 = JsonLoader
 
-ObjectiveC library for loading JSON from Remote URL's and caching their contents for speedy subsequent loads
+ObjectiveC library for loading JSON from Remote URL's and caching their contents for speedy subsequent loads.
+
+== Example Usage
+
+   NSURLRequest *req = [NSURLRequest requestWithURL:[NSURL URLWithString:@"http://sig.io"]];
+   myJsonLoader = [[JsonLoader alloc] initWithRequest:req delegate:self]; 
+
+And then implement the delegate methods:
+
+   - (void)jsonLoadedSuccessfully:(JsonLoader*)loader json:(id)jsonObject;
+   - (void)jsonFailed:(JsonLoader*)loader;
+   - (BOOL)willShowError:(JsonLoader*)loader error:(NSString*)error json:(NSString*)json;
 
 == Features
 
 * Simple API
+
+* Uses delegate pattern
+
 * Caching via Core Data (sorry, no docs on that yet)
 
 == Dependencies
