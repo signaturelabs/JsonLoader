@@ -26,6 +26,8 @@
 
 @property (nonatomic, assign) id<JsonLoaderDelegate> delegate;
 
+@property (nonatomic, readonly) BOOL loading;
+
 - (id)initWithRequest:(NSURLRequest*)request delegate:(id)delegate;
 
 /// Tries to load from the cache first, falling back on a web request.

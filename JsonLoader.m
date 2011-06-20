@@ -32,6 +32,8 @@
 
 @property (nonatomic, assign) BOOL updateCache;
 
+@property (nonatomic, readwrite) BOOL loading;
+
 - (void)didFinishLoading:(NSData*)jsonData;
 
 @end
@@ -39,7 +41,7 @@
 
 @implementation JsonLoader
 
-@synthesize delegate;
+@synthesize delegate, loading;
 @synthesize jsonLoaderInteral, url, updateCache;
 
 - (id)initWithRequest:(NSURLRequest*)request delegate:(id)del {
@@ -47,6 +49,8 @@
 	if(self = [super init]) {
 		
 		self.delegate = del;
+		
+		self.loading = YES;
 		
 		self.jsonLoaderInteral =
 		[[JsonLoaderInternal alloc] initWithRequest:request delegate:self];
@@ -83,6 +87,8 @@
 			
 			self.updateCache = YES;
 			
+			self.loading = YES;
+			
 			self.jsonLoaderInteral =
 			[[JsonLoaderInternal alloc] initWithRequest:request delegate:self];
 			[self.jsonLoaderInteral release];
@@ -94,13 +100,17 @@
 
 - (void)cancel {
 	
+	self.loading = NO;
+	
 	[self.jsonLoaderInteral cancel];
 }
 
 - (void)jsonLoadedSuccessfully:(id)dictionary {
-	if([self.delegate respondsToSelector:@selector(jsonLoadedSuccessfully:json:)]) {
+	
+	self.loading = NO;
+	
+	if([self.delegate respondsToSelector:@selector(jsonLoadedSuccessfully:json:)])
         [self.delegate jsonLoadedSuccessfully:self json:dictionary];
-    }
 }
 
 - (BOOL)willShowError:(JsonLoader *)loader
@@ -115,11 +125,15 @@
 
 - (void)jsonFailed:(JsonLoader *)loader {
 	
+	self.loading = NO;
+	
 	if([self.delegate respondsToSelector:@selector(jsonFailed:)])
 		[self.delegate jsonFailed:self];
 }
 
 - (void)didFinishLoading:(NSData*)jsonData {
+	
+	self.loading = NO;
 	
 	if(self.updateCache)
 		[[JsonCache shared] setCacheData:jsonData forUrl:self.url];
