@@ -24,5 +24,6 @@
 @dynamic url;
 @dynamic rawData;
 @dynamic timestamp;
+@dynamic expire;
 
 @end

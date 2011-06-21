@@ -24,12 +24,13 @@
 
 @property (nonatomic, retain) NSURLConnection *connection;
 @property (nonatomic, retain) NSMutableData *requestData;
+@property (nonatomic, readwrite, retain) NSURLResponse *response;
 
 @end
 
 @implementation JsonLoaderInternal
 
-@synthesize delegate;
+@synthesize delegate, response;
 @synthesize connection, requestData;
 
 - (id)initWithRequest:(NSURLRequest *)request delegate:(id)del {
@@ -86,7 +87,9 @@
 	}
 }
 
-- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
+- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)res {
+	
+	self.response = res;
 	
 	self.requestData = [NSMutableData data];
 }
@@ -126,6 +129,7 @@
 - (void)dealloc {
 	
 	self.delegate = nil;
+	self.response = nil;
 	
 	[self cancel];
 	

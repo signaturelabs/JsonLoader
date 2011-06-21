@@ -135,8 +135,30 @@
 	
 	self.loading = NO;
 	
-	if(self.updateCache)
-		[[JsonCache shared] setCacheData:jsonData forUrl:self.url];
+	if(self.updateCache) {
+		
+		int maxAge = -1;
+		
+		if([self.jsonLoaderInteral.response isKindOfClass:[NSHTTPURLResponse class]]) {
+			
+			NSHTTPURLResponse *response = (NSHTTPURLResponse*)
+			self.jsonLoaderInteral.response;
+			
+			NSDictionary *head = [response allHeaderFields];
+			
+			NSString *str = [head objectForKey:@"Cache-Control"];
+			
+			if(str) {
+				
+				NSRange r = [str rangeOfString:@"max-age="];
+				
+				if(r.location != NSNotFound)
+					maxAge = [[str substringFromIndex:r.location + r.length] intValue]; 
+			}
+		}
+		
+		[[JsonCache shared] setCacheData:jsonData forUrl:self.url expire:maxAge];
+	}
 	
 	NSError *error = nil;
 	

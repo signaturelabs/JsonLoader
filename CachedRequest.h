@@ -26,5 +26,6 @@
 @property (nonatomic, retain) NSString * url;
 @property (nonatomic, retain) NSData * rawData;
 @property (nonatomic, retain) NSDate * timestamp;
+@property (nonatomic, retain) NSNumber * expire;
 
 @end

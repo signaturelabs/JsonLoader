@@ -29,6 +29,8 @@
 
 @property (nonatomic, assign) id delegate;
 
+@property (nonatomic, readonly, retain) NSURLResponse *response;
+
 - (id)initWithRequest:(NSURLRequest*)request delegate:(id)delegate;
 
 - (void)cancel;

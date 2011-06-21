@@ -29,4 +29,7 @@
 
 - (void)setCacheData:(NSData*)data forUrl:(NSURL*)url;
 
+/// pass -1 for 'inSeconds' for the default expiration
+- (void)setCacheData:(NSData*)data forUrl:(NSURL*)url expire:(int)inSeconds;
+
 @end

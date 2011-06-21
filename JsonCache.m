@@ -20,8 +20,6 @@
 #import "CachedRequest.h"
 #import <CoreData/CoreData.h>
 
-#define INVALIDATION_TIMEOUT (60 * 60 * 24 * 30)
-
 
 @interface JsonCache ()
 
@@ -121,8 +119,9 @@
 	for(NSDictionary *cachedRequest in array) {
 		
 		NSDate *date = [cachedRequest objectForKey:@"timestamp"];
+		NSNumber *expire = [cachedRequest objectForKey:@"expire"];
 		
-		if(-[date timeIntervalSinceNow] > INVALIDATION_TIMEOUT)
+		if(-[date timeIntervalSinceNow] > [expire intValue])
 			[self.managedObjectContext deleteObject:
 			 [self getCachedRequestForUrlString:[cachedRequest objectForKey:@"url"]]];
 	}
@@ -227,7 +226,8 @@
 	CachedRequest *cachedRequest = [self getCachedRequestForUrl:url];
 	
 	if(cachedRequest
-	   && [cachedRequest.timestamp timeIntervalSinceNow] > INVALIDATION_TIMEOUT) {
+	   && [cachedRequest.timestamp timeIntervalSinceNow] >
+	   [cachedRequest.expire intValue]) {
 		
 		[self.managedObjectContext deleteObject:cachedRequest];
 		return nil;
@@ -242,7 +242,8 @@
 	
 	if(cachedRequest) {
 		
-		if([cachedRequest.timestamp timeIntervalSinceNow] > INVALIDATION_TIMEOUT) {
+		if([cachedRequest.timestamp timeIntervalSinceNow] >
+		   [cachedRequest.expire intValue]) {
 			
 			[self.managedObjectContext deleteObject:cachedRequest];
 			return nil;
@@ -255,7 +256,7 @@
 	return cachedRequest.rawData;
 }
 
-- (void)setCacheData:(NSData*)data forUrl:(NSURL*)url {
+- (void)setCacheData:(NSData*)data forUrl:(NSURL*)url expire:(int)inSeconds {
 	
 	CachedRequest *cachedRequest = [self getCachedRequestForUrl:url];
 	
@@ -265,6 +266,14 @@
 	cachedRequest.rawData = data;
 	cachedRequest.url = [url absoluteString];
 	cachedRequest.timestamp = [NSDate date];
+	
+	if(inSeconds != -1)
+		cachedRequest.expire = [NSNumber numberWithInt:inSeconds];
+}
+
+- (void)setCacheData:(NSData*)data forUrl:(NSURL*)url {
+	
+	[self setCacheData:data forUrl:url expire:-1];
 }
 
 - (id)init {
