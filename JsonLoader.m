@@ -123,11 +123,13 @@
 	
 	self.loading = NO;
 	
+    if(self.releaseWhenDone)
+		[self autorelease];
+    
 	if([self.delegate respondsToSelector:@selector(jsonLoadedSuccessfully:json:)])
         [self.delegate jsonLoadedSuccessfully:self json:dictionary];
 	
-	if(self.releaseWhenDone)
-		[self release];
+
 }
 
 - (BOOL)willShowError:(JsonLoader *)loader
@@ -144,11 +146,12 @@
 	
 	self.loading = NO;
 	
+	if(self.releaseWhenDone)
+		[self autorelease];
+    
 	if([self.delegate respondsToSelector:@selector(jsonFailed:)])
 		[self.delegate jsonFailed:self];
 	
-	if(self.releaseWhenDone)
-		[self release];
 }
 
 - (void)jsonCanceled {
@@ -208,8 +211,8 @@
 	else if([self willShowError:nil error:errorStr json:nil])
 		[self jsonFailed:nil];
 	
-	if(self.releaseWhenDone)
-		[self release];
+	else if(self.releaseWhenDone)
+		[self autorelease];
 }
 
 - (void)dealloc {
