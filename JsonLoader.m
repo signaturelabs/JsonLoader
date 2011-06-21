@@ -21,8 +21,6 @@
 #import "JsonCache.h"
 #import "CJSONDeserializer.h"
 
-#define REFRESH_TIMEOUT (60 * 60 * 24)
-
 
 @interface JsonLoader ()
 
@@ -41,7 +39,7 @@
 
 @implementation JsonLoader
 
-@synthesize delegate, loading;
+@synthesize delegate, loading, releaseWhenDone;
 @synthesize jsonLoaderInteral, url, updateCache;
 
 - (id)initWithRequest:(NSURLRequest*)request delegate:(id)del {
@@ -70,17 +68,13 @@
 		
 		self.url = request.URL;
 		
-		NSData *data =
-		[[JsonCache shared] cacheDataForUrl:self.url getAge:&age];
+		NSData *data = [[JsonCache shared] cacheDataForUrl:self.url getAge:&age];
 		
 		if(data) {
 			
 			[self didFinishLoading:data];
 			
-			if(age > REFRESH_TIMEOUT)
-				data = nil;
-			else
-				self.delegate = nil;
+			self.delegate = nil;
 		}
 		
 		if(!data){
@@ -93,6 +87,26 @@
 			[[JsonLoaderInternal alloc] initWithRequest:request delegate:self];
 			[self.jsonLoaderInteral release];
 		}
+	}
+	
+	return self;
+}
+
+- (id)initWithCacheBustingRequest:(NSURLRequest*)request delegate:(id)del {
+	
+	if(self = [super init]) {
+		
+		self.delegate = del;
+		
+		self.url = request.URL;
+		
+		self.updateCache = YES;
+		
+		self.loading = YES;
+		
+		self.jsonLoaderInteral =
+		[[JsonLoaderInternal alloc] initWithRequest:request delegate:self];
+		[self.jsonLoaderInteral release];
 	}
 	
 	return self;
@@ -111,6 +125,9 @@
 	
 	if([self.delegate respondsToSelector:@selector(jsonLoadedSuccessfully:json:)])
         [self.delegate jsonLoadedSuccessfully:self json:dictionary];
+	
+	if(self.releaseWhenDone)
+		[self release];
 }
 
 - (BOOL)willShowError:(JsonLoader *)loader
@@ -129,6 +146,15 @@
 	
 	if([self.delegate respondsToSelector:@selector(jsonFailed:)])
 		[self.delegate jsonFailed:self];
+	
+	if(self.releaseWhenDone)
+		[self release];
+}
+
+- (void)jsonCanceled {
+	
+	if(self.releaseWhenDone)
+		[self release];
 }
 
 - (void)didFinishLoading:(NSData*)jsonData {
@@ -181,9 +207,14 @@
 	
 	else if([self willShowError:nil error:errorStr json:nil])
 		[self jsonFailed:nil];
+	
+	if(self.releaseWhenDone)
+		[self release];
 }
 
 - (void)dealloc {
+	
+	self.releaseWhenDone = NO;
 	
 	[self.jsonLoaderInteral cancel];
 	self.jsonLoaderInteral.delegate = nil;

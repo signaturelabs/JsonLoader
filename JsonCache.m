@@ -18,6 +18,7 @@
 
 #import "JsonCache.h"
 #import "CachedRequest.h"
+#import "JsonLoader.h"
 #import <CoreData/CoreData.h>
 
 
@@ -221,6 +222,21 @@
 	 inManagedObjectContext:self.managedObjectContext];
 }
 
+- (void)checkForSoftUpdate:(CachedRequest*)cachedRequest url:(NSURL*)url {
+	
+	if([[NSDate date] earlierDate:
+		[cachedRequest.timestamp dateByAddingTimeInterval:
+		 [cachedRequest.expire intValue] / 2]] != cachedRequest.timestamp) {
+			
+			NSURLRequest *req = [NSURLRequest requestWithURL:url];
+			
+			JsonLoader *updater =
+			[[JsonLoader alloc] initWithCacheBustingRequest:req delegate:nil];
+			
+			updater.releaseWhenDone = YES;
+		}
+}
+
 - (NSData*)cacheDataForUrl:(NSURL*)url {
 	
 	CachedRequest *cachedRequest = [self getCachedRequestForUrl:url];
@@ -232,6 +248,8 @@
 		[self.managedObjectContext deleteObject:cachedRequest];
 		return nil;
 	}
+	
+	[self checkForSoftUpdate:cachedRequest url:url];
 	
 	return cachedRequest.rawData;
 }
@@ -252,6 +270,8 @@
 		if(age)
 			*age = [cachedRequest.timestamp timeIntervalSinceNow];
 	}
+	
+	[self checkForSoftUpdate:cachedRequest url:url];
 	
 	return cachedRequest.rawData;
 }

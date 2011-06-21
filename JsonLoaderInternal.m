@@ -46,15 +46,13 @@
 			self.connection = [NSURLConnection
 							   connectionWithRequest:request
 							   delegate:self];
-			
 		}
 		else {
 			
 			DLog(@"jsonLoaderInternal.initWithRequest called with empty url");
-						
+			
 			if([self.delegate respondsToSelector:@selector(jsonFailed:)])
 				[self.delegate jsonFailed:nil];
-			
 		}
 		
 	}
@@ -122,6 +120,9 @@
 
 - (void)cancel {
 	
+	if([self.delegate respondsToSelector:@selector(jsonCanceled)])
+		[self.delegate performSelector:@selector(jsonCanceled)];
+	
 	[self.connection cancel];
 	self.connection = nil;
 }
@@ -138,6 +139,5 @@
 	
 	[super dealloc];
 }
-
 
 @end

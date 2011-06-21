@@ -28,12 +28,17 @@
 
 @property (nonatomic, readonly) BOOL loading;
 
+@property (nonatomic, assign) BOOL releaseWhenDone;
+
 - (id)initWithRequest:(NSURLRequest*)request delegate:(id)delegate;
 
 /// Tries to load from the cache first, falling back on a web request.
 /// The cache is updated according to a cache updating policy decided
 /// internally.
 - (id)initWithCacheRequest:(NSURLRequest*)request delegate:(id)delegate;
+
+/// Like initWithCacheRequest but loads from the server no matter what
+- (id)initWithCacheBustingRequest:(NSURLRequest*)request delegate:(id)delegate;
 
 - (void)cancel;
 
