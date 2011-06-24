@@ -60,6 +60,8 @@
 
 - (id)initWithCacheRequest:(NSURLRequest*)request delegate:(id)del {
 	
+    NSLog(@"initWithCacheRequest with url: %@", [request URL]);
+    
 	if(self = [super init]) {
 		
 		self.delegate = del;
@@ -71,6 +73,9 @@
 		NSData *data = [[JsonCache shared] cacheDataForUrl:self.url getAge:&age];
 		
 		if(data) {
+            
+            NSLog(@"initWithCacheRequest is returning cached data for url");
+
 			
 			[self didFinishLoading:data];
 			
@@ -78,6 +83,8 @@
 		}
 		
 		if(!data){
+            
+            NSLog(@"initWithCacheRequest is fetching new content, cache is stale or missing");
 			
 			self.updateCache = YES;
 			
