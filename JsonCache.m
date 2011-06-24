@@ -259,8 +259,9 @@
 	CachedRequest *cachedRequest = [self getCachedRequestForUrl:url];
 	
 	if(cachedRequest) {
-        
-		if([cachedRequest.timestamp timeIntervalSinceNow] >
+
+		if([cachedRequest.expire intValue] == 0 || 
+           [cachedRequest.timestamp timeIntervalSinceNow] >
 		   [cachedRequest.expire intValue]) {
 
             NSLog(@"cacheDataForUrl deleting stale cache content for: %@", url);
