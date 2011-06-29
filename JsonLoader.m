@@ -32,6 +32,8 @@
 
 @property (nonatomic, readwrite) BOOL loading;
 
+@property (nonatomic, retain) NSData *cacheData;
+
 - (void)didFinishLoading:(NSData*)jsonData;
 
 @end
@@ -39,7 +41,7 @@
 
 @implementation JsonLoader
 
-@synthesize delegate, loading, releaseWhenDone;
+@synthesize delegate, loading, cacheData, releaseWhenDone;
 @synthesize jsonLoaderInteral, url, updateCache;
 
 - (id)initWithRequest:(NSURLRequest*)request delegate:(id)del {
@@ -67,7 +69,7 @@
 		NSTimeInterval age = 0;
 		
 		self.url = request.URL;
-		
+        
 		NSData *data = [[JsonCache shared] cacheDataForUrl:self.url getAge:&age];
 		
 		if(data) {
@@ -75,6 +77,20 @@
 			[self didFinishLoading:data];
 			
 			self.delegate = nil;
+            
+            if([[JsonCache shared] cachedDataHasExpired:self.url]) {
+                
+                self.cacheData = data;
+                data = nil;
+            }
+            else {
+                
+                NSLog(@"initWithCacheRequest is returning cached data for url");
+                
+                [self didFinishLoading:data];
+                
+                self.delegate = nil;
+            }
 		}
 		
 		if(!data){
@@ -117,6 +133,8 @@
 	self.loading = NO;
 	
 	[self.jsonLoaderInteral cancel];
+    
+    self.cacheData = nil;
 }
 
 - (void)jsonLoadedSuccessfully:(id)dictionary {
@@ -128,6 +146,8 @@
 	
 	if(self.releaseWhenDone)
 		[self release];
+    
+    self.cacheData = nil;
 }
 
 - (BOOL)willShowError:(JsonLoader *)loader
@@ -149,9 +169,18 @@
 	
 	if(self.releaseWhenDone)
 		[self release];
+    
+    if(self.cacheData && [self.delegate respondsToSelector:@selector(jsonLoadedSuccessfully:json:)])
+        [self.delegate jsonLoadedSuccessfully:self json:self.cacheData];
+	if([self.delegate respondsToSelector:@selector(jsonFailed:)])
+		[self.delegate jsonFailed:self];
+    
+    self.cacheData = nil;
 }
 
 - (void)jsonCanceled {
+    
+    self.cacheData = nil;
 	
 	if(self.releaseWhenDone)
 		[self release];
@@ -220,7 +249,9 @@
 	self.jsonLoaderInteral.delegate = nil;
 	self.jsonLoaderInteral = nil;
 	
-	self.url = nil;
+    self.cacheData = nil;
+    
+    self.url = nil;
 	
 	[super dealloc];
 }

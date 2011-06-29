@@ -237,17 +237,30 @@
 		}
 }
 
-- (NSData*)cacheDataForUrl:(NSURL*)url {
-	
+- (BOOL)cachedDataHasExpired:(NSURL*)url {
+    
 	CachedRequest *cachedRequest = [self getCachedRequestForUrl:url];
 	
 	if(cachedRequest
 	   && [cachedRequest.timestamp timeIntervalSinceNow] >
 	   [cachedRequest.expire intValue]) {
 		
-		[self.managedObjectContext deleteObject:cachedRequest];
-		return nil;
+		return YES;
 	}
+    
+    return NO;
+}
+
+- (void)clearDataForUrl:(NSURL*)url {
+    
+    CachedRequest *cachedRequest = [self getCachedRequestForUrl:url];
+	
+    [self.managedObjectContext deleteObject:cachedRequest];
+}
+
+- (NSData*)cacheDataForUrl:(NSURL*)url {
+	
+	CachedRequest *cachedRequest = [self getCachedRequestForUrl:url];
 	
 	[self checkForSoftUpdate:cachedRequest url:url];
 	

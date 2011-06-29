@@ -24,7 +24,19 @@
 
 - (void)clearCache;
 
+/// Returns YES if the data exists in the database and it has expired.
+/// Otherwise NO is returned.
+- (BOOL)cachedDataHasExpired:(NSURL*)url;
+
+/// Call this if the cached data has expired for the url to clear it out.
+- (void)clearDataForUrl:(NSURL*)url;
+
+/// Returns the data for url.  If nothing is found nil
+/// is returned.
 - (NSData*)cacheDataForUrl:(NSURL*)url;
+
+/// Returns the data for url.  If nothing is found nil
+/// is returned.  *age will be set to the age of the item if found.
 - (NSData*)cacheDataForUrl:(NSURL*)url getAge:(NSTimeInterval*)age;
 
 - (void)setCacheData:(NSData*)data forUrl:(NSURL*)url;
