@@ -139,6 +139,7 @@
 	
 	self.loading = NO;
 	
+    self.jsonLoaderInteral.delegate = nil;
 	[self.jsonLoaderInteral cancel];
     
     self.cacheData = nil;
@@ -150,17 +151,19 @@
 	
     if(self.releaseWhenDone)
 		[self autorelease];
-    
-	if([self.delegate respondsToSelector:@selector(jsonLoadedSuccessfully:json:)])
-        [self.delegate jsonLoadedSuccessfully:self json:dictionary];
 	
     self.cacheData = nil;
+    
+    // This must be the last line in function because delegates can release us.
+	if([self.delegate respondsToSelector:@selector(jsonLoadedSuccessfully:json:)])
+        [self.delegate jsonLoadedSuccessfully:self json:dictionary];
 }
 
 - (BOOL)willShowError:(JsonLoader *)loader
 				error:(NSString *)error
 				 json:(NSString *)json {
 	
+    // This must be the last line in function because delegates can release us.
 	if([self.delegate respondsToSelector:@selector(willShowError:error:json:)])
 		return [self.delegate willShowError:self error:error json:json];
 	
@@ -174,12 +177,13 @@
 	if(self.releaseWhenDone)
 		[self autorelease];
     
+    self.cacheData = nil;
+    
+    // This must be the last line in function because delegates can release us.
     if(self.cacheData && [self.delegate respondsToSelector:@selector(jsonLoadedSuccessfully:json:)])
         [self.delegate jsonLoadedSuccessfully:self json:self.cacheData];
 	if([self.delegate respondsToSelector:@selector(jsonFailed:)])
 		[self.delegate jsonFailed:self];
-    
-    self.cacheData = nil;
 }
 
 - (void)jsonCanceled {
@@ -235,14 +239,19 @@
 	if(!errorStr && [dictionary isMemberOfClass:[NSDictionary class]])
 		errorStr = [dictionary objectForKey:@"error"];
 	
-	if(!errorStr && dictionary)
+    // This else if chain must be the last line in function because delegates can release us.
+	if(!errorStr && dictionary) {
+        
 		[self jsonLoadedSuccessfully:dictionary];
-	
-	else if([self willShowError:nil error:errorStr json:nil])
+	}
+	else if([self willShowError:nil error:errorStr json:nil]) {
+        
 		[self jsonFailed:nil];
-	
-	else if(self.releaseWhenDone)
+    }
+	else if(self.releaseWhenDone) {
+        
 		[self autorelease];
+    }
 }
 
 - (void)dealloc {
