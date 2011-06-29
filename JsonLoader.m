@@ -62,6 +62,8 @@
 
 - (id)initWithCacheRequest:(NSURLRequest*)request delegate:(id)del {
 	
+    NSLog(@"initWithCacheRequest with url: %@", [request URL]);
+    
 	if(self = [super init]) {
 		
 		self.delegate = del;
@@ -73,6 +75,9 @@
 		NSData *data = [[JsonCache shared] cacheDataForUrl:self.url getAge:&age];
 		
 		if(data) {
+            
+            NSLog(@"initWithCacheRequest is returning cached data for url");
+
 			
 			[self didFinishLoading:data];
 			
@@ -94,6 +99,8 @@
 		}
 		
 		if(!data){
+            
+            NSLog(@"initWithCacheRequest is fetching new content, cache is stale or missing");
 			
 			self.updateCache = YES;
 			
@@ -141,12 +148,12 @@
 	
 	self.loading = NO;
 	
+    if(self.releaseWhenDone)
+		[self autorelease];
+    
 	if([self.delegate respondsToSelector:@selector(jsonLoadedSuccessfully:json:)])
         [self.delegate jsonLoadedSuccessfully:self json:dictionary];
 	
-	if(self.releaseWhenDone)
-		[self release];
-    
     self.cacheData = nil;
 }
 
@@ -164,11 +171,8 @@
 	
 	self.loading = NO;
 	
-	if([self.delegate respondsToSelector:@selector(jsonFailed:)])
-		[self.delegate jsonFailed:self];
-	
 	if(self.releaseWhenDone)
-		[self release];
+		[self autorelease];
     
     if(self.cacheData && [self.delegate respondsToSelector:@selector(jsonLoadedSuccessfully:json:)])
         [self.delegate jsonLoadedSuccessfully:self json:self.cacheData];
@@ -237,8 +241,8 @@
 	else if([self willShowError:nil error:errorStr json:nil])
 		[self jsonFailed:nil];
 	
-	if(self.releaseWhenDone)
-		[self release];
+	else if(self.releaseWhenDone)
+		[self autorelease];
 }
 
 - (void)dealloc {

@@ -272,17 +272,30 @@
 	CachedRequest *cachedRequest = [self getCachedRequestForUrl:url];
 	
 	if(cachedRequest) {
-		
-		if([cachedRequest.timestamp timeIntervalSinceNow] >
+
+		if([cachedRequest.expire intValue] == 0 || 
+           [cachedRequest.timestamp timeIntervalSinceNow] >
 		   [cachedRequest.expire intValue]) {
-			
+
+            NSLog(@"cacheDataForUrl deleting stale cache content for: %@", url);
+
 			[self.managedObjectContext deleteObject:cachedRequest];
 			return nil;
 		}
+        else {
+
+            NSLog(@"cacheDataForUrl found valid cached content for: %@", url);
+
+        }
 		
 		if(age)
 			*age = [cachedRequest.timestamp timeIntervalSinceNow];
 	}
+    else {
+        
+        NSLog(@"cacheDataForUrl nothing in cache found for: %@", url);
+
+    }
 	
 	[self checkForSoftUpdate:cachedRequest url:url];
 	
