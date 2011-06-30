@@ -29,6 +29,7 @@
 @property (nonatomic, retain) NSManagedObjectModel *managedObjectModel;
 
 - (void)saveContext;
+- (void)saveContext:(BOOL)cleanupExpired;
 
 - (CachedRequest*)getCachedRequestForUrl:(NSURL*)url;
 - (CachedRequest*)getCachedRequestForUrlString:(NSString*)urlString;
@@ -158,14 +159,20 @@
          [self getCachedRequestForUrlString:[cachedRequest objectForKey:@"url"]]];
 	}
     
-    [self saveContext];
+    [self saveContext:FALSE];
 
 	
 }
 
 - (void)saveContext {
+    [self saveContext:TRUE];
+}
+
+- (void)saveContext:(BOOL)cleanupExpired {
 	
-	[self cleanupExpired];
+    if (cleanupExpired) {
+        [self cleanupExpired];
+    }
     
     NSError *error = nil;
 	
