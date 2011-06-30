@@ -98,9 +98,20 @@
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
+    
+    NSHTTPURLResponse *hRes = nil;
+    
+    if([self.response isKindOfClass:[NSHTTPURLResponse class]])
+        hRes = (NSHTTPURLResponse*)self.response;
 	
-	[self.delegate performSelector:@selector(didFinishLoading:)
-						withObject:self.requestData];
+    if(hRes && hRes.statusCode != 200) {
+        
+        if([self.delegate respondsToSelector:@selector(jsonFailed:)])
+            [self.delegate jsonFailed:nil];
+    }
+    else
+        [self.delegate performSelector:@selector(didFinishLoading:)
+                            withObject:self.requestData];
 	
 	self.connection = nil;
 	self.requestData = nil;

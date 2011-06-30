@@ -77,7 +77,6 @@
 		if(data) {
             
             NSLog(@"initWithCacheRequest is returning cached data for url");
-
 			
 			[self didFinishLoading:data];
 			
