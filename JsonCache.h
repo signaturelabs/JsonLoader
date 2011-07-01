@@ -33,11 +33,11 @@
 
 /// Returns the data for url.  If nothing is found nil
 /// is returned.
-- (NSData*)cacheDataForUrl:(NSURL*)url;
+- (NSData*)cacheDataForUrl:(NSURL*)url checkForSoftUpdate:(BOOL)checkForSoftUpdate;
 
 /// Returns the data for url.  If nothing is found nil
 /// is returned.  *age will be set to the age of the item if found.
-- (NSData*)cacheDataForUrl:(NSURL*)url getAge:(NSTimeInterval*)age;
+- (NSData*)cacheDataForUrl:(NSURL*)url getAge:(NSTimeInterval*)age checkForSoftUpdate:(BOOL)checkForSoftUpdate;
 
 - (void)setCacheData:(NSData*)data forUrl:(NSURL*)url;
 

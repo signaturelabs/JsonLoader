@@ -30,6 +30,7 @@
 
 - (void)saveContext;
 - (void)saveContext:(BOOL)cleanupExpired;
+- (BOOL)isPermacached:(NSString *)url;
 
 - (CachedRequest*)getCachedRequestForUrl:(NSURL*)url;
 - (CachedRequest*)getCachedRequestForUrlString:(NSString*)urlString;
@@ -129,9 +130,19 @@
 		NSDate *date = [cachedRequest objectForKey:@"timestamp"];
 		NSNumber *expire = [cachedRequest objectForKey:@"expire"];
 		
-		if(-[date timeIntervalSinceNow] > [expire intValue])
-			[self.managedObjectContext deleteObject:
-			 [self getCachedRequestForUrlString:[cachedRequest objectForKey:@"url"]]];
+		if(-[date timeIntervalSinceNow] > [expire intValue]) {
+            
+            NSURL *url = [cachedRequest objectForKey:@"url"];
+            if (![self isPermacached:url]) {
+                [self.managedObjectContext deleteObject:
+                 [self getCachedRequestForUrlString:[cachedRequest objectForKey:@"url"]]];
+                NSLog(@"Deleting expired cached json for url: %@", [cachedRequest objectForKey:@"url"]);                
+            }
+            else {
+                NSLog(@"url is permacached, not touching it: %@", [cachedRequest objectForKey:@"url"]);                
+            }
+            
+        }
 	}
 	
 	[formatter release];
@@ -163,6 +174,18 @@
 
 	
 }
+
+- (BOOL)isPermacached:(NSString *)url {
+    
+    if ([url rangeOfString:@"retailers.json"].location != NSNotFound) {
+        
+        return TRUE;
+    }
+        
+    return FALSE;
+        
+}
+
 
 - (void)saveContext {
     [self saveContext:TRUE];
@@ -271,28 +294,41 @@
     [self.managedObjectContext deleteObject:cachedRequest];
 }
 
-- (NSData*)cacheDataForUrl:(NSURL*)url {
+- (NSData*)cacheDataForUrl:(NSURL*)url checkForSoftUpdate:(BOOL)checkForSoftUpdate {
 	
 	CachedRequest *cachedRequest = [self getCachedRequestForUrl:url];
 	
-	[self checkForSoftUpdate:cachedRequest url:url];
+    if (checkForSoftUpdate) {
+       [self checkForSoftUpdate:cachedRequest url:url]; 
+    }
 	
 	return cachedRequest.rawData;
 }
 
-- (NSData*)cacheDataForUrl:(NSURL*)url getAge:(NSTimeInterval*)age {
+- (NSData*)cacheDataForUrl:(NSURL*)url getAge:(NSTimeInterval*)age checkForSoftUpdate:(BOOL)checkForSoftUpdate {
 	
 	CachedRequest *cachedRequest = [self getCachedRequestForUrl:url];
 	
 	if(cachedRequest) {
+        
+        NSTimeInterval timeIntervalSinceNow = [cachedRequest.timestamp timeIntervalSinceNow];
+        int timeIntervalSinceNowInt = (int) timeIntervalSinceNow;
+        timeIntervalSinceNowInt = abs(timeIntervalSinceNowInt);
+
+        NSLog(@"cachedRequest.expire: %d", [cachedRequest.expire intValue]);
+        NSLog(@"cachedRequest.timestamp timeIntervalSinceNow: %d", timeIntervalSinceNowInt);
 
 		if([cachedRequest.expire intValue] == 0 || 
-           [cachedRequest.timestamp timeIntervalSinceNow] >
+           timeIntervalSinceNowInt >
 		   [cachedRequest.expire intValue]) {
-
-            NSLog(@"cacheDataForUrl deleting stale cache content for: %@", url);
-
-			[self.managedObjectContext deleteObject:cachedRequest];
+            
+            if (![self isPermacached:[url absoluteString]]) {
+                NSLog(@"cacheDataForUrl deleting stale cache content for: %@", url);
+                [self.managedObjectContext deleteObject:cachedRequest];
+            }
+            else {
+                NSLog(@"url is permacached, not deleting it even though it appears stale: %@", url);
+            }
 			return nil;
 		}
         else {
@@ -310,7 +346,9 @@
 
     }
 	
-	[self checkForSoftUpdate:cachedRequest url:url];
+    if (checkForSoftUpdate) {
+        [self checkForSoftUpdate:cachedRequest url:url]; 
+    }
 	
 	return cachedRequest.rawData;
 }

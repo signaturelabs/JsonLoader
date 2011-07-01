@@ -72,11 +72,11 @@
 		
 		self.url = request.URL;
         
-		NSData *data = [[JsonCache shared] cacheDataForUrl:self.url getAge:&age];
+		NSData *data = [[JsonCache shared] cacheDataForUrl:self.url getAge:&age checkForSoftUpdate:YES];
 		
 		if(data) {
             
-            NSLog(@"initWithCacheRequest is returning cached data for url");
+            NSLog(@"initWithCacheRequest found cached data for url");
 			
 			[self didFinishLoading:data];
 			
@@ -84,12 +84,14 @@
             
             if([[JsonCache shared] cachedDataHasExpired:self.url]) {
                 
+                NSLog(@"initWithCacheRequest cached data has expired");
+                
                 self.cacheData = data;
                 data = nil;
             }
             else {
                 
-                NSLog(@"initWithCacheRequest is returning cached data for url");
+                NSLog(@"initWithCacheRequest cached data has not expired");
                 
                 [self didFinishLoading:data];
                 
@@ -100,7 +102,7 @@
 		if(!data){
             
             NSLog(@"initWithCacheRequest is fetching new content, cache is stale or missing");
-			
+            			
 			self.updateCache = YES;
 			
 			self.loading = YES;
@@ -170,19 +172,38 @@
 }
 
 - (void)jsonFailed:(JsonLoader *)loader {
+    
+    NSLog(@"jsonFailed called");
 	
 	self.loading = NO;
 	
 	if(self.releaseWhenDone)
 		[self autorelease];
     
+    NSLog(@"try to fallback to stale cached data");
+    NSData *temp = [[JsonCache shared] cacheDataForUrl:self.url checkForSoftUpdate:NO];      
+    
+    NSError *error = nil;
+
+    NSDictionary *dictionary =
+	[[CJSONDeserializer deserializer]
+	 deserialize:temp
+	 error:&error];
+    
     self.cacheData = nil;
     
     // This must be the last line in function because delegates can release us.
-    if(self.cacheData && [self.delegate respondsToSelector:@selector(jsonLoadedSuccessfully:json:)])
-        [self.delegate jsonLoadedSuccessfully:self json:self.cacheData];
-	if([self.delegate respondsToSelector:@selector(jsonFailed:)])
-		[self.delegate jsonFailed:self];
+    if(dictionary && [self.delegate respondsToSelector:@selector(jsonLoadedSuccessfully:json:)]) {
+        NSLog(@"found stale cached data, calling jsonLoadedSuccessfully");
+        [self.delegate jsonLoadedSuccessfully:self json:dictionary];
+    }
+    else {
+        NSLog(@"NOT calling jsonLoadedSuccessfully, caling delegate jsonFailed");
+        if([self.delegate respondsToSelector:@selector(jsonFailed:)])
+            [self.delegate jsonFailed:self];
+    }
+
+    
 }
 
 - (void)jsonCanceled {
@@ -245,12 +266,19 @@
 	}
 	else if([self willShowError:nil error:errorStr json:nil]) {
         
+        NSLog(@"Failed to create dictionary from cached data.  Error: %@", errorStr);
+        
+        NSString* aStr = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+        NSLog(@"Cached data: %@", aStr);
+        [aStr release];
+               
 		[self jsonFailed:nil];
     }
 	else if(self.releaseWhenDone) {
         
 		[self autorelease];
     }
+    
 }
 
 - (void)dealloc {
