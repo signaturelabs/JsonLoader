@@ -180,7 +180,7 @@
 	if(self.releaseWhenDone)
 		[self autorelease];
     
-    NSLog(@"try to fallback to stale cached data");
+    NSLog(@"try to fallback to stale cached data for url: %@", self.url);
     NSData *temp = [[JsonCache shared] cacheDataForUrl:self.url checkForSoftUpdate:NO];      
     
     NSError *error = nil;
@@ -194,11 +194,11 @@
     
     // This must be the last line in function because delegates can release us.
     if(dictionary && [self.delegate respondsToSelector:@selector(jsonLoadedSuccessfully:json:)]) {
-        NSLog(@"found stale cached data, calling jsonLoadedSuccessfully");
+        NSLog(@"found stale cached data for url: %@, calling jsonLoadedSuccessfully", self.url);
         [self.delegate jsonLoadedSuccessfully:self json:dictionary];
     }
     else {
-        NSLog(@"NOT calling jsonLoadedSuccessfully, caling delegate jsonFailed");
+        NSLog(@"could not find stale cached data for url: %@, caling delegate jsonFailed", self.url);
         if([self.delegate respondsToSelector:@selector(jsonFailed:)])
             [self.delegate jsonFailed:self];
     }
