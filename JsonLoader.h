@@ -37,6 +37,11 @@
 /// internally.
 - (id)initWithCacheRequest:(NSURLRequest*)request delegate:(id)delegate;
 
+/// Like initwithCacheRequest:: but allows you make the item permanent (perma).
+/// Perma means the object is kept alive in cache and returend in cases
+/// where there is not internet or the server fails.
+- (id)initWithCacheRequest:(NSURLRequest*)request delegate:(id)delegate perma:(BOOL)perma;
+
 /// Like initWithCacheRequest but loads from the server no matter what
 - (id)initWithCacheBustingRequest:(NSURLRequest*)request delegate:(id)delegate;
 

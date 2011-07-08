@@ -30,7 +30,6 @@
 
 - (void)saveContext;
 - (void)saveContext:(BOOL)cleanupExpired;
-- (BOOL)isPermacached:(NSString *)url;
 
 - (CachedRequest*)getCachedRequestForUrl:(NSURL*)url;
 - (CachedRequest*)getCachedRequestForUrlString:(NSString*)urlString;
@@ -118,12 +117,9 @@
 	
 	request.resultType = NSDictionaryResultType;
 	request.propertiesToFetch =
-	[NSArray arrayWithObjects:@"timestamp", @"url", nil];
+	[NSArray arrayWithObjects:@"timestamp", @"url", @"perma", nil];
 	
 	NSArray *array = [moc executeFetchRequest:request error:nil];
-	
-	NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-	[formatter setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
 	
 	for(NSDictionary *cachedRequest in array) {
 		
@@ -132,10 +128,11 @@
 		
 		if(-[date timeIntervalSinceNow] > [expire intValue]) {
             
-            NSURL *url = [cachedRequest objectForKey:@"url"];
-            if (![self isPermacached:url]) {
+            if (![[cachedRequest objectForKey:@"perma"] boolValue]) {
+                
                 [self.managedObjectContext deleteObject:
                  [self getCachedRequestForUrlString:[cachedRequest objectForKey:@"url"]]];
+                
                 NSLog(@"Deleting expired cached json for url: %@", [cachedRequest objectForKey:@"url"]);                
             }
             else {
@@ -144,8 +141,6 @@
             
         }
 	}
-	
-	[formatter release];
 }
 
 - (void)clearCache {
@@ -173,17 +168,6 @@
     [self saveContext:FALSE];
 
 	
-}
-
-- (BOOL)isPermacached:(NSString *)url {
-    
-    if ([url rangeOfString:@"retailers.json"].location != NSNotFound) {
-        
-        return TRUE;
-    }
-        
-    return FALSE;
-        
 }
 
 
@@ -322,7 +306,7 @@
            timeIntervalSinceNowInt >
 		   [cachedRequest.expire intValue]) {
             
-            if (![self isPermacached:[url absoluteString]]) {
+            if (![cachedRequest.perma boolValue]) {
                 NSLog(@"cacheDataForUrl deleting stale cache content for: %@", url);
                 [self.managedObjectContext deleteObject:cachedRequest];
             }
@@ -353,7 +337,7 @@
 	return cachedRequest.rawData;
 }
 
-- (void)setCacheData:(NSData*)data forUrl:(NSURL*)url expire:(int)inSeconds {
+- (void)setCacheData:(NSData*)data forUrl:(NSURL*)url expire:(int)inSeconds perma:(BOOL)perma {
 	
 	CachedRequest *cachedRequest = [self getCachedRequestForUrl:url];
 	
@@ -363,6 +347,7 @@
 	cachedRequest.rawData = data;
 	cachedRequest.url = [url absoluteString];
 	cachedRequest.timestamp = [NSDate date];
+    cachedRequest.perma = [NSNumber numberWithBool:perma];
 	
 	if(inSeconds != -1)
 		cachedRequest.expire = [NSNumber numberWithInt:inSeconds];
@@ -370,7 +355,7 @@
 
 - (void)setCacheData:(NSData*)data forUrl:(NSURL*)url {
 	
-	[self setCacheData:data forUrl:url expire:-1];
+	[self setCacheData:data forUrl:url expire:-1 perma:NO];
 }
 
 - (id)init {

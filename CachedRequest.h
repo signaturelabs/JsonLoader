@@ -27,5 +27,6 @@
 @property (nonatomic, retain) NSData * rawData;
 @property (nonatomic, retain) NSDate * timestamp;
 @property (nonatomic, retain) NSNumber * expire;
+@property (nonatomic, retain) NSNumber * perma;
 
 @end

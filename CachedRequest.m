@@ -25,5 +25,6 @@
 @dynamic rawData;
 @dynamic timestamp;
 @dynamic expire;
+@dynamic perma;
 
 @end
