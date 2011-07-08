@@ -34,6 +34,8 @@
 
 @property (nonatomic, retain) NSData *cacheData;
 
+@property (nonatomic, assign) BOOL perma;
+
 - (void)didFinishLoading:(NSData*)jsonData;
 
 @end
@@ -41,7 +43,7 @@
 
 @implementation JsonLoader
 
-@synthesize delegate, loading, cacheData, releaseWhenDone;
+@synthesize delegate, loading, cacheData, perma, releaseWhenDone;
 @synthesize jsonLoaderInteral, url, updateCache;
 
 - (id)initWithRequest:(NSURLRequest*)request delegate:(id)del {
@@ -61,10 +63,17 @@
 }
 
 - (id)initWithCacheRequest:(NSURLRequest*)request delegate:(id)del {
+    
+    return [self initWithCacheRequest:request delegate:del perma:NO];
+}
+
+- (id)initWithCacheRequest:(NSURLRequest*)request delegate:(id)del perma:(BOOL)permaP {
 	
     NSLog(@"initWithCacheRequest with url: %@", [request URL]);
     
 	if(self = [super init]) {
+        
+        self.perma = permaP;
 		
 		self.delegate = del;
 		
@@ -240,7 +249,7 @@
 			}
 		}
 		
-		[[JsonCache shared] setCacheData:jsonData forUrl:self.url expire:maxAge];
+		[[JsonCache shared] setCacheData:jsonData forUrl:self.url expire:maxAge perma:self.perma];
 	}
 	
 	NSError *error = nil;
