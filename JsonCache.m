@@ -210,8 +210,18 @@
 }
 
 - (CachedRequest*)getCachedRequestForUrl:(NSURL*)url {
-	
-	return [self getCachedRequestForUrlString:[url absoluteString]];
+    
+    @try {
+        
+        return [self getCachedRequestForUrlString:[url absoluteString]];
+        
+    }
+    @catch (NSException *exception) {
+		
+		NSLog(@"Caught %@: %@ when trying to get object from cache for url: %@", [exception name], [exception  reason], url);
+		return nil;
+	}
+    
 }
 
 - (CachedRequest*)getCachedRequestForUrlString:(NSString*)urlString {
@@ -236,10 +246,21 @@
 
 - (CachedRequest*)createCachedRequest {
 	
-	return
-	[NSEntityDescription
-	 insertNewObjectForEntityForName:@"CachedRequest"
-	 inManagedObjectContext:self.managedObjectContext];
+    @try {
+        
+        return
+        [NSEntityDescription
+         insertNewObjectForEntityForName:@"CachedRequest"
+         inManagedObjectContext:self.managedObjectContext];
+        
+    }
+    @catch (NSException *exception) {
+		
+		NSLog(@"Caught %@: %@ when trying to create cached request.  ", [exception name], [exception  reason]);
+		return nil;
+	}
+    
+	
 }
 
 - (void)checkForSoftUpdate:(CachedRequest*)cachedRequest url:(NSURL*)url {
