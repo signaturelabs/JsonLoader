@@ -312,66 +312,86 @@
 
 - (NSData*)cacheDataForUrl:(NSURL*)url getAge:(NSTimeInterval*)age checkForSoftUpdate:(BOOL)checkForSoftUpdate {
 	
-	CachedRequest *cachedRequest = [self getCachedRequestForUrl:url];
-	
-	if(cachedRequest) {
+    @try {
+
         
-        NSTimeInterval timeIntervalSinceNow = [cachedRequest.timestamp timeIntervalSinceNow];
-        int timeIntervalSinceNowInt = (int) timeIntervalSinceNow;
-        timeIntervalSinceNowInt = abs(timeIntervalSinceNowInt);
-
-        NSLog(@"cachedRequest.expire: %d", [cachedRequest.expire intValue]);
-        NSLog(@"cachedRequest.timestamp timeIntervalSinceNow: %d", timeIntervalSinceNowInt);
-
-		if([cachedRequest.expire intValue] == 0 || 
-           timeIntervalSinceNowInt >
-		   [cachedRequest.expire intValue]) {
+        CachedRequest *cachedRequest = [self getCachedRequestForUrl:url];
+        
+        if(cachedRequest) {
             
-            if (![cachedRequest.perma boolValue]) {
-                NSLog(@"cacheDataForUrl deleting stale cache content for: %@", url);
-                [self.managedObjectContext deleteObject:cachedRequest];
+            NSTimeInterval timeIntervalSinceNow = [cachedRequest.timestamp timeIntervalSinceNow];
+            int timeIntervalSinceNowInt = (int) timeIntervalSinceNow;
+            timeIntervalSinceNowInt = abs(timeIntervalSinceNowInt);
+            
+            NSLog(@"cachedRequest.expire: %d", [cachedRequest.expire intValue]);
+            NSLog(@"cachedRequest.timestamp timeIntervalSinceNow: %d", timeIntervalSinceNowInt);
+            
+            if([cachedRequest.expire intValue] == 0 || 
+               timeIntervalSinceNowInt >
+               [cachedRequest.expire intValue]) {
+                
+                if (![cachedRequest.perma boolValue]) {
+                    NSLog(@"cacheDataForUrl deleting stale cache content for: %@", url);
+                    [self.managedObjectContext deleteObject:cachedRequest];
+                }
+                else {
+                    NSLog(@"url is permacached, not deleting it even though it appears stale: %@", url);
+                }
+                return nil;
             }
             else {
-                NSLog(@"url is permacached, not deleting it even though it appears stale: %@", url);
+                
+                NSLog(@"cacheDataForUrl found valid cached content for: %@", url);
+                
             }
-			return nil;
-		}
-        else {
-
-            NSLog(@"cacheDataForUrl found valid cached content for: %@", url);
-
+            
+            if(age)
+                *age = [cachedRequest.timestamp timeIntervalSinceNow];
         }
-		
-		if(age)
-			*age = [cachedRequest.timestamp timeIntervalSinceNow];
-	}
-    else {
+        else {
+            
+            NSLog(@"cacheDataForUrl nothing in cache found for: %@", url);
+            
+        }
         
-        NSLog(@"cacheDataForUrl nothing in cache found for: %@", url);
+        if (checkForSoftUpdate) {
+            [self checkForSoftUpdate:cachedRequest url:url]; 
+        }
+        
+        return cachedRequest.rawData;
 
+        
     }
-	
-    if (checkForSoftUpdate) {
-        [self checkForSoftUpdate:cachedRequest url:url]; 
-    }
-	
-	return cachedRequest.rawData;
+    @catch (NSException *exception) {
+		
+		NSLog(@"Caught %@: %@ when trying to cache data for url: %@", [exception name], [exception  reason], url);
+		return nil;
+	}
+    
 }
 
 - (void)setCacheData:(NSData*)data forUrl:(NSURL*)url expire:(int)inSeconds perma:(BOOL)perma {
 	
-	CachedRequest *cachedRequest = [self getCachedRequestForUrl:url];
+    @try {
+        CachedRequest *cachedRequest = [self getCachedRequestForUrl:url];
 	
-	if(!cachedRequest)
-		cachedRequest = [self createCachedRequest];
-	
-	cachedRequest.rawData = data;
-	cachedRequest.url = [url absoluteString];
-	cachedRequest.timestamp = [NSDate date];
-    cachedRequest.perma = [NSNumber numberWithBool:perma];
-	
-	if(inSeconds != -1)
-		cachedRequest.expire = [NSNumber numberWithInt:inSeconds];
+        if(!cachedRequest) {
+            cachedRequest = [self createCachedRequest];
+        }
+        cachedRequest.rawData = data;
+        cachedRequest.url = [url absoluteString];
+        cachedRequest.timestamp = [NSDate date];
+        cachedRequest.perma = [NSNumber numberWithBool:perma];
+        
+        if(inSeconds != -1) {
+            cachedRequest.expire = [NSNumber numberWithInt:inSeconds];
+        }
+        
+    }
+    @catch (NSException *exception) {
+        NSLog(@"Caught %@: %@ when trying to set cache data for url: %@", [exception name], [exception  reason], url);
+    }
+    
 }
 
 - (void)setCacheData:(NSData*)data forUrl:(NSURL*)url {
