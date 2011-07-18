@@ -316,7 +316,9 @@
                timeIntervalSinceNowInt >
                [cachedRequest.expire intValue]) {
                 
-                if (![cachedRequest.perma boolValue]) {
+                if (![cachedRequest respondsToSelector:@selector(perma)]
+                    || ![cachedRequest.perma boolValue]) {
+                    
                     NSLog(@"cacheDataForUrl deleting stale cache content for: %@", url);
                     [self.managedObjectContext deleteObject:cachedRequest];
                 }
