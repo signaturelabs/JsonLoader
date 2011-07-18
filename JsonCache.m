@@ -211,16 +211,9 @@
 
 - (CachedRequest*)getCachedRequestForUrl:(NSURL*)url {
     
-    @try {
         
-        return [self getCachedRequestForUrlString:[url absoluteString]];
+    return [self getCachedRequestForUrlString:[url absoluteString]];
         
-    }
-    @catch (NSException *exception) {
-		
-		NSLog(@"Caught %@: %@ when trying to get object from cache for url: %@", [exception name], [exception  reason], url);
-		return nil;
-	}
     
 }
 
@@ -246,19 +239,12 @@
 
 - (CachedRequest*)createCachedRequest {
 	
-    @try {
         
-        return
+    return
         [NSEntityDescription
          insertNewObjectForEntityForName:@"CachedRequest"
          inManagedObjectContext:self.managedObjectContext];
         
-    }
-    @catch (NSException *exception) {
-		
-		NSLog(@"Caught %@: %@ when trying to create cached request.  ", [exception name], [exception  reason]);
-		return nil;
-	}
     
 	
 }
@@ -381,7 +367,10 @@
         cachedRequest.rawData = data;
         cachedRequest.url = [url absoluteString];
         cachedRequest.timestamp = [NSDate date];
-        cachedRequest.perma = [NSNumber numberWithBool:perma];
+        
+        if([cachedRequest respondsToSelector:@selector(setPerma:)]) {
+            cachedRequest.perma = [NSNumber numberWithBool:perma];
+        }
         
         if(inSeconds != -1) {
             cachedRequest.expire = [NSNumber numberWithInt:inSeconds];
