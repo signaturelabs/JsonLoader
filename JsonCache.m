@@ -62,7 +62,7 @@
 }
 
 - (NSPersistentStoreCoordinator*)persistentStoreCoordinator {
-	
+    
 	if(!persistentStoreCoordinator) {
 		
 		NSURL *storeURL = [[self applicationDocumentsDirectory]
@@ -73,6 +73,31 @@
 		 initWithManagedObjectModel:self.managedObjectModel];
         
 		NSError *error = nil;
+        
+        
+        // check if we actually need to migrate (for debug purposes)
+        NSDictionary *sourceMetadata =
+        [NSPersistentStoreCoordinator metadataForPersistentStoreOfType:NSSQLiteStoreType
+                                                                   URL:storeURL
+                                                                 error:&error];
+        if (sourceMetadata == nil) {
+            // deal with error
+            NSLog(@"JsonCache: sourceMetadata == nil, cannot check if JSON cache needs to be migrated");
+        }
+        else {
+            NSManagedObjectModel *destinationModel = [persistentStoreCoordinator managedObjectModel];
+            BOOL pscCompatibile = [destinationModel
+                                   isConfiguration:nil
+                                   compatibleWithStoreMetadata:sourceMetadata];
+            if (pscCompatibile) {
+                NSLog(@"JsonCache: existing JSON cache is compatible , no need to migrate");
+                // no need to migrate
+            }
+            else {
+                NSLog(@"JsonCache: existing JSON cache is not compatible, need to migrate");
+            }            
+        }
+
         
         NSDictionary *options =
         [NSDictionary dictionaryWithObjectsAndKeys:
@@ -100,7 +125,7 @@
 							  initWithContentsOfURL:
 							  [[NSBundle mainBundle]
 							   URLForResource:@"JsonCache"
-							   withExtension:@"mom"]];
+							   withExtension:@"momd"]];
 	
 	return managedObjectModel;
 }
