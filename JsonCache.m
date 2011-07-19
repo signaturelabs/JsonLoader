@@ -351,8 +351,7 @@
                timeIntervalSinceNowInt >
                [cachedRequest.expire intValue]) {
                 
-                if (![cachedRequest respondsToSelector:@selector(perma)]
-                    || ![cachedRequest.perma boolValue]) {
+                if (![cachedRequest.perma boolValue]) {
                     
                     NSLog(@"cacheDataForUrl deleting stale cache content for: %@", url);
                     [self.managedObjectContext deleteObject:cachedRequest];
@@ -405,9 +404,7 @@
         cachedRequest.url = [url absoluteString];
         cachedRequest.timestamp = [NSDate date];
         
-        if([cachedRequest respondsToSelector:@selector(setPerma:)]) {
-            cachedRequest.perma = [NSNumber numberWithBool:perma];
-        }
+        cachedRequest.perma = [NSNumber numberWithBool:perma];
         
         if(inSeconds != -1) {
             cachedRequest.expire = [NSNumber numberWithInt:inSeconds];
