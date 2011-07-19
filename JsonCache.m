@@ -71,7 +71,7 @@
 		persistentStoreCoordinator =
 		[[NSPersistentStoreCoordinator alloc]
 		 initWithManagedObjectModel:self.managedObjectModel];
-		
+        
 		NSError *error = nil;
         
         NSDictionary *options =
@@ -116,8 +116,18 @@
 				inManagedObjectContext:moc];
 	
 	request.resultType = NSDictionaryResultType;
-	request.propertiesToFetch =
-	[NSArray arrayWithObjects:@"timestamp", @"url", @"perma", nil];
+    
+    NSMutableArray *ary =
+	[NSMutableArray arrayWithObjects:@"timestamp", @"url", nil];
+    
+    NSDictionary *props = request.entity.propertiesByName;
+    
+    // This is here because migration is not working.  So instead of
+    // crashing, we disable the perma functionality.
+    if([props objectForKey:@"perma"])
+        [ary addObject:@"perma"];
+    
+	request.propertiesToFetch = ary;
 	
 	NSArray *array = [moc executeFetchRequest:request error:nil];
 	
@@ -392,7 +402,7 @@
 
 - (id)init {
 	
-	if(self = [super init]) {
+	if((self = [super init])) {
 		
 		[[NSNotificationCenter defaultCenter]
 		 addObserver:self
