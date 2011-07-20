@@ -165,8 +165,10 @@
             
             if (![[cachedRequest objectForKey:@"perma"] boolValue]) {
                 
-                [self.managedObjectContext deleteObject:
-                 [self getCachedRequestForUrlString:[cachedRequest objectForKey:@"url"]]];
+                id obj = [self getCachedRequestForUrlString:[cachedRequest objectForKey:@"url"]];
+                
+                if(obj)
+                    [self.managedObjectContext deleteObject:obj];
                 
                 NSLog(@"Deleting expired cached json for url: %@", [cachedRequest objectForKey:@"url"]);                
             }
@@ -196,8 +198,10 @@
 	
 	for(NSDictionary *cachedRequest in array) {
 		
-        [self.managedObjectContext deleteObject:
-         [self getCachedRequestForUrlString:[cachedRequest objectForKey:@"url"]]];
+        id obj = [self getCachedRequestForUrlString:[cachedRequest objectForKey:@"url"]];
+        
+        if(obj)
+            [self.managedObjectContext deleteObject:obj];
 	}
     
     [self saveContext:FALSE];
