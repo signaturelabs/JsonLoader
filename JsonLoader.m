@@ -182,7 +182,7 @@
 
 - (void)jsonFailed:(JsonLoader *)loader {
     
-    NSLog(@"jsonFailed called");
+    NSLog(@"jsonFailed called for url: %@", self.url);
 	
 	self.loading = NO;
 	
