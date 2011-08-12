@@ -51,7 +51,9 @@
 	if(self = [super init]) {
 		
 		self.delegate = del;
-		
+
+        self.url = request.URL;
+
 		self.loading = YES;
 		
 		self.jsonLoaderInteral =
