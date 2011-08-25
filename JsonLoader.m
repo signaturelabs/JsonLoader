@@ -110,17 +110,7 @@
                 self.cacheData = data;
                 data = nil;
             }
-            else {
-                
-                if(self.fastMode)
-                    NSLog(@"initWithCacheRequest expired but we're in fastMode");
-                else
-                    NSLog(@"initWithCacheRequest cached data has not expired");
-                
-                [self didFinishLoading:data];
-                
-                self.delegate = nil;
-            }
+            
 		}
 		
 		if(!data){

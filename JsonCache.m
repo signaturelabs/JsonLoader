@@ -354,16 +354,16 @@
             if([cachedRequest.expire intValue] == 0 || 
                timeIntervalSinceNowInt >
                [cachedRequest.expire intValue]) {
-                
+
                 if (![cachedRequest.perma boolValue]) {
                     
                     NSLog(@"cacheDataForUrl deleting stale cache content for: %@", url);
                     [self.managedObjectContext deleteObject:cachedRequest];
+                    return nil;
                 }
                 else {
-                    NSLog(@"url is permacached, not deleting it even though it appears stale: %@", url);
+                    NSLog(@"url is permacached, going to use cached data even though it appears stale: %@", url);
                 }
-                return nil;
             }
             else {
                 
