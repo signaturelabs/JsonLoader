@@ -109,10 +109,51 @@
 			  addPersistentStoreWithType:NSSQLiteStoreType
 			  configuration:nil URL:storeURL
 			  options:options error:&error]) {
-			
-			NSLog(@"persistentStoreCoordinator error %@, %@", error, [error userInfo]);
-			abort();
+            
+            NSLog(@"persistentStoreCoordinator addPersistentStoreWithType error %@, %@", error, [error userInfo]);
+            NSLog(@"persistentStoreCoordinator store: %@ ", storeURL); 
+
+            // try to delete the store and try again
+            NSError *error;
+            NSFileManager *fileMgr = [NSFileManager defaultManager];
+            
+            [fileMgr removeItemAtURL:storeURL error:&error];
+            
+            if(error) {
+                NSLog(@"could not delete store at %@", storeURL); 
+            }
+            else {
+                NSLog(@"deleted store at %@", storeURL); 
+            }
+            
+            if ([fileMgr fileExistsAtPath:[storeURL path]]) {
+                NSLog(@"store at %@ is still there!  deleting didnt work", storeURL); 
+            }
+            else {
+                NSLog(@"store at %@ is gone - deleting worked", storeURL); 
+            }
+            
+            if (![persistentStoreCoordinator
+                  addPersistentStoreWithType:NSSQLiteStoreType
+                  configuration:nil URL:storeURL
+                  options:options error:&error]) {
+                
+                NSLog(@"persistentStoreCoordinator addPersistentStoreWithType failed again!  store: %@ ", storeURL); 
+                NSLog(@"persistentStoreCoordinator addPersistentStoreWithType error %@, %@", error, [error userInfo]);
+
+                NSLog(@"calling recursively as last act of desperation");
+                persistentStoreCoordinator = nil;
+                return [self persistentStoreCoordinator];
+                
+            }
+            else {
+                NSLog(@"persistentStoreCoordinator addPersistentStoreWithType apparently worked second attempt");
+            }
+
 		}  
+        else {
+            NSLog(@"persistentStoreCoordinator addPersistentStoreWithType succeeded");
+        }
 	}
 	
 	return persistentStoreCoordinator;
