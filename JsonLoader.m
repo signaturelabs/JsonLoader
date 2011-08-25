@@ -169,6 +169,8 @@
 
 - (void)jsonLoadedSuccessfully:(id)dictionary {
 	
+	NSLog(@"jsonLoadedSuccessfully: %@", self.url);
+	
 	self.loading = NO;
 	
     if(self.releaseWhenDone)
@@ -239,6 +241,8 @@
 	
 	self.loading = NO;
 	
+	NSLog(@"JsonLoader#didFinishLoading called for %@", [self url]);
+	
 	if(self.updateCache) {
 		
 		int maxAge = -1;
@@ -260,7 +264,8 @@
 					maxAge = [[str substringFromIndex:r.location + r.length] intValue]; 
 			}
 		}
-		
+
+		NSLog(@"JsonLoader#didFinishLoading going to update cache, self.updateCache is true");
 		[[JsonCache shared] setCacheData:jsonData forUrl:self.url expire:maxAge perma:self.perma];
 	}
 	

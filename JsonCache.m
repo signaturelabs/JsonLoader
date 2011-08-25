@@ -335,13 +335,19 @@
 		[cachedRequest.timestamp dateByAddingTimeInterval:
 		 [cachedRequest.expire intValue] / 2]] != cachedRequest.timestamp) {
 			
+			NSLog(@"checkForSoftUpdate running: %@", url);
+			
 			NSURLRequest *req = [NSURLRequest requestWithURL:url];
 			
 			JsonLoader *updater =
 			[[JsonLoader alloc] initWithCacheBustingRequest:req delegate:nil perma:perma];
 			
 			updater.releaseWhenDone = YES;
-		}
+	}
+	else {
+		NSLog(@"checkForSoftUpdate not running: %@", url);
+	}
+	
 }
 
 - (BOOL)cachedDataHasExpired:(NSURL*)url {
@@ -380,7 +386,8 @@
 	
     @try {
 
-        
+        NSLog(@"cacheDataForUrl called for: %@", url);
+		
         CachedRequest *cachedRequest = [self getCachedRequestForUrl:url];
         
         if(cachedRequest) {
@@ -422,6 +429,7 @@
         }
         
         if (checkForSoftUpdate) {
+			NSLog(@"checkForSoftUpdate: %@", url);
             [self checkForSoftUpdate:cachedRequest url:url perma:[cachedRequest.perma boolValue]]; 
         }
         
