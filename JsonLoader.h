@@ -37,13 +37,21 @@
 /// internally.
 - (id)initWithCacheRequest:(NSURLRequest*)request delegate:(id)delegate;
 
+/// Returns whatever we have in cache immediately.  If we don't have this
+/// item in the cache, we pull it from the server.  If the cache data was
+/// expired, we start a background task to update it.
+- (id)initWithFastCacheRequest:(NSURLRequest*)request delegate:(id)delegate;
+
 /// Like initwithCacheRequest:: but allows you make the item permanent (perma).
-/// Perma means the object is kept alive in cache and returend in cases
+/// Perma means the object is kept alive in cache and returned in cases
 /// where there is not internet or the server fails.
 - (id)initWithCacheRequest:(NSURLRequest*)request delegate:(id)delegate perma:(BOOL)perma;
 
 /// Like initWithCacheRequest but loads from the server no matter what
 - (id)initWithCacheBustingRequest:(NSURLRequest*)request delegate:(id)delegate;
+
+/// Like initWithCacheRequest but loads from the server no matter what
+- (id)initWithCacheBustingRequest:(NSURLRequest*)request delegate:(id)delegate perma:(BOOL)perma;
 
 - (void)cancel;
 

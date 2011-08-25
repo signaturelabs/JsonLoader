@@ -288,7 +288,7 @@
 	
 }
 
-- (void)checkForSoftUpdate:(CachedRequest*)cachedRequest url:(NSURL*)url {
+- (void)checkForSoftUpdate:(CachedRequest*)cachedRequest url:(NSURL*)url perma:(BOOL)perma {
 	
 	if([[NSDate date] earlierDate:
 		[cachedRequest.timestamp dateByAddingTimeInterval:
@@ -297,7 +297,7 @@
 			NSURLRequest *req = [NSURLRequest requestWithURL:url];
 			
 			JsonLoader *updater =
-			[[JsonLoader alloc] initWithCacheBustingRequest:req delegate:nil];
+			[[JsonLoader alloc] initWithCacheBustingRequest:req delegate:nil perma:perma];
 			
 			updater.releaseWhenDone = YES;
 		}
@@ -329,7 +329,7 @@
 	CachedRequest *cachedRequest = [self getCachedRequestForUrl:url];
 	
     if (checkForSoftUpdate) {
-       [self checkForSoftUpdate:cachedRequest url:url]; 
+       [self checkForSoftUpdate:cachedRequest url:url perma:[cachedRequest.perma boolValue]]; 
     }
 	
 	return cachedRequest.rawData;
@@ -381,7 +381,7 @@
         }
         
         if (checkForSoftUpdate) {
-            [self checkForSoftUpdate:cachedRequest url:url]; 
+            [self checkForSoftUpdate:cachedRequest url:url perma:[cachedRequest.perma boolValue]]; 
         }
         
         return cachedRequest.rawData;

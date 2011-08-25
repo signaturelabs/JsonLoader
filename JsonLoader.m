@@ -35,6 +35,7 @@
 @property (nonatomic, retain) NSData *cacheData;
 
 @property (nonatomic, assign) BOOL perma;
+@property (nonatomic, assign) BOOL fastMode;
 
 - (void)didFinishLoading:(NSData*)jsonData;
 
@@ -43,7 +44,7 @@
 
 @implementation JsonLoader
 
-@synthesize delegate, loading, cacheData, perma, releaseWhenDone;
+@synthesize delegate, loading, cacheData, perma, fastMode, releaseWhenDone;
 @synthesize jsonLoaderInteral, url, updateCache;
 
 - (id)initWithRequest:(NSURLRequest*)request delegate:(id)del {
@@ -65,6 +66,13 @@
 - (id)initWithCacheRequest:(NSURLRequest*)request delegate:(id)del {
     
     return [self initWithCacheRequest:request delegate:del perma:NO];
+}
+
+- (id)initWithFastCacheRequest:(NSURLRequest*)request delegate:(id)del {
+    
+    self.fastMode = YES;
+    
+    return [self initWithCacheRequest:request delegate:del perma:YES];
 }
 
 - (id)initWithCacheRequest:(NSURLRequest*)request delegate:(id)del perma:(BOOL)permaP {
@@ -91,7 +99,9 @@
 			
 			self.delegate = nil;
             
-            if([[JsonCache shared] cachedDataHasExpired:self.url]) {
+            BOOL expired = [[JsonCache shared] cachedDataHasExpired:self.url];
+            
+            if(expired && !self.fastMode) {
                 
                 NSLog(@"initWithCacheRequest cached data has expired");
                 
@@ -100,7 +110,10 @@
             }
             else {
                 
-                NSLog(@"initWithCacheRequest cached data has not expired");
+                if(self.fastMode)
+                    NSLog(@"initWithCacheRequest expired but we're in fastMode");
+                else
+                    NSLog(@"initWithCacheRequest cached data has not expired");
                 
                 [self didFinishLoading:data];
                 
@@ -125,10 +138,12 @@
 	return self;
 }
 
-- (id)initWithCacheBustingRequest:(NSURLRequest*)request delegate:(id)del {
+- (id)initWithCacheBustingRequest:(NSURLRequest*)request delegate:(id)del perma:(BOOL)permaP {
 	
 	if(self = [super init]) {
 		
+        self.perma = permaP;
+        
 		self.delegate = del;
 		
 		self.url = request.URL;
@@ -143,6 +158,11 @@
 	}
 	
 	return self;
+}
+
+- (id)initWithCacheBustingRequest:(NSURLRequest*)request delegate:(id)del {
+    
+    return [self initWithCacheRequest:request delegate:del perma:NO];
 }
 
 - (void)cancel {
