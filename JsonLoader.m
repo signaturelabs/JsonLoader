@@ -52,7 +52,9 @@
 	if(self = [super init]) {
 		
 		self.delegate = del;
-		
+
+        self.url = request.URL;
+
 		self.loading = YES;
 		
 		self.jsonLoaderInteral =
@@ -202,7 +204,7 @@
 
 - (void)jsonFailed:(JsonLoader *)loader {
     
-    NSLog(@"jsonFailed called");
+    NSLog(@"jsonFailed called for url: %@", self.url);
 	
 	self.loading = NO;
 	

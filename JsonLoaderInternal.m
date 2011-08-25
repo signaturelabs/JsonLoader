@@ -22,6 +22,8 @@
 
 @interface JsonLoaderInternal ()
 
+-(void)dumpResponse;
+
 @property (nonatomic, retain) NSURLConnection *connection;
 @property (nonatomic, retain) NSMutableData *requestData;
 @property (nonatomic, readwrite, retain) NSURLResponse *response;
@@ -105,6 +107,8 @@
         hRes = (NSHTTPURLResponse*)self.response;
 	
     if(hRes && hRes.statusCode != 200) {
+
+        [self dumpResponse];
         
         if([self.delegate respondsToSelector:@selector(jsonFailed:)])
             [self.delegate jsonFailed:nil];
@@ -149,6 +153,24 @@
 	self.requestData = nil;
 	
 	[super dealloc];
+}
+
+#pragma mark - Private
+
+-(void)dumpResponse {
+    
+    NSString* responseStr = [[NSString alloc] initWithData:self.requestData 
+                                                  encoding:NSUTF8StringEncoding];
+    
+    NSRange stringRange = {0,100};
+    if ([responseStr length] > 100) {
+        NSLog(@"jsonFailed - response (truncated): %@", [responseStr substringWithRange:stringRange]);
+    }
+    else {
+        NSLog(@"jsonFailed - response: %@", responseStr);
+    }
+
+    
 }
 
 @end
