@@ -114,7 +114,7 @@
             NSLog(@"persistentStoreCoordinator store: %@ ", storeURL); 
 
             // try to delete the store and try again
-            NSError *error;
+            error = nil;
             NSFileManager *fileMgr = [NSFileManager defaultManager];
             
             [fileMgr removeItemAtURL:storeURL error:&error];
