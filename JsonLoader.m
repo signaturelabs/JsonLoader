@@ -20,6 +20,7 @@
 #import "JsonLoaderInternal.h"
 #import "JsonCache.h"
 #import "CJSONDeserializer.h"
+#import <CommonCrypto/CommonDigest.h>
 
 
 @interface JsonLoader ()
@@ -309,7 +310,50 @@
         
 		[self autorelease];
     }
+}
+
++ (void)installPreloadedCachedJson:(NSString*)preloadPath {
+	
+    NSFileManager *mng = [NSFileManager defaultManager];
     
+    for(NSString *component in [mng contentsOfDirectoryAtPath:preloadPath error:nil]) {
+        
+        if([component.pathExtension isEqual:@"url"]) {
+            
+            NSString *str = [NSString stringWithContentsOfFile:
+							 [preloadPath stringByAppendingPathComponent:component] encoding:NSUTF8StringEncoding error:nil];
+            
+            NSURL *url = [NSURL URLWithString:str];
+            
+			// Skip it if it's already in the cache.
+            if([[JsonCache shared] cacheDataForUrl:url checkForSoftUpdate:NO])
+                continue;
+            
+            const char *cStr = [str UTF8String];
+            
+            unsigned char result[CC_MD5_DIGEST_LENGTH];
+            CC_MD5(cStr, strlen(cStr), result);
+            NSString *s = [NSString stringWithFormat:
+                           @"%02x%02x%02x%02x%02x"
+                           @"%02x%02x%02x%02x%02x"
+                           @"%02x%02x%02x%02x%02x"
+                           @"%02x",
+                           result[0],  result[1],  result[2],  result[3],  result[4],
+                           result[5],  result[6],  result[7],  result[8],  result[9],
+                           result[10], result[11], result[12], result[13], result[14],
+                           result[15]];
+            
+            NSString *cachePath =
+			[preloadPath stringByAppendingPathComponent:
+			 [[s lowercaseString] stringByAppendingPathExtension:@"cache"]];
+            
+            NSLog(@"Setting intial cache data for url: %@", url);
+            
+            NSData *data = [NSData dataWithContentsOfFile:cachePath];
+            
+            [[JsonCache shared] setCacheData:data forUrl:url expire:-1 perma:YES];
+        }
+    }
 }
 
 - (void)dealloc {

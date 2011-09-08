@@ -53,6 +53,12 @@
 /// Like initWithCacheRequest but loads from the server no matter what
 - (id)initWithCacheBustingRequest:(NSURLRequest*)request delegate:(id)delegate perma:(BOOL)perma;
 
+/// Loads all cache objects in a directory.  It loads all items in the dir 'preloadDir'
+/// with the extension ".url"  Each file contains 1 complete url.
+/// Then we MD5 hash the url and load a filename of the structure <MD5 Hash>.cache which
+/// must contain the cache value for that url.
++ (void)installPreloadedCachedJson:(NSString*)preloadDir;
+
 - (void)cancel;
 
 @end
