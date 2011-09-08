@@ -111,17 +111,7 @@
                 self.cacheData = data;
                 data = nil;
             }
-            else {
-                
-                if(self.fastMode)
-                    NSLog(@"initWithCacheRequest expired but we're in fastMode");
-                else
-                    NSLog(@"initWithCacheRequest cached data has not expired");
-                
-                [self didFinishLoading:data];
-                
-                self.delegate = nil;
-            }
+            
 		}
 		
 		if(!data){
@@ -179,6 +169,8 @@
 }
 
 - (void)jsonLoadedSuccessfully:(id)dictionary {
+	
+	NSLog(@"jsonLoadedSuccessfully: %@", self.url);
 	
 	self.loading = NO;
 	
@@ -250,6 +242,8 @@
 	
 	self.loading = NO;
 	
+	NSLog(@"JsonLoader#didFinishLoading called for %@", [self url]);
+	
 	if(self.updateCache) {
 		
 		int maxAge = -1;
@@ -271,7 +265,8 @@
 					maxAge = [[str substringFromIndex:r.location + r.length] intValue]; 
 			}
 		}
-		
+
+		NSLog(@"JsonLoader#didFinishLoading going to update cache, self.updateCache is true");
 		[[JsonCache shared] setCacheData:jsonData forUrl:self.url expire:maxAge perma:self.perma];
 	}
 	

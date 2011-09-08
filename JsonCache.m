@@ -109,10 +109,51 @@
 			  addPersistentStoreWithType:NSSQLiteStoreType
 			  configuration:nil URL:storeURL
 			  options:options error:&error]) {
-			
-			NSLog(@"persistentStoreCoordinator error %@, %@", error, [error userInfo]);
-			abort();
+            
+            NSLog(@"persistentStoreCoordinator addPersistentStoreWithType error %@, %@", error, [error userInfo]);
+            NSLog(@"persistentStoreCoordinator store: %@ ", storeURL); 
+
+            // try to delete the store and try again
+            error = nil;
+            NSFileManager *fileMgr = [NSFileManager defaultManager];
+            
+            [fileMgr removeItemAtURL:storeURL error:&error];
+            
+            if(error) {
+                NSLog(@"could not delete store at %@", storeURL); 
+            }
+            else {
+                NSLog(@"deleted store at %@", storeURL); 
+            }
+            
+            if ([fileMgr fileExistsAtPath:[storeURL path]]) {
+                NSLog(@"store at %@ is still there!  deleting didnt work", storeURL); 
+            }
+            else {
+                NSLog(@"store at %@ is gone - deleting worked", storeURL); 
+            }
+            
+            if (![persistentStoreCoordinator
+                  addPersistentStoreWithType:NSSQLiteStoreType
+                  configuration:nil URL:storeURL
+                  options:options error:&error]) {
+                
+                NSLog(@"persistentStoreCoordinator addPersistentStoreWithType failed again!  store: %@ ", storeURL); 
+                NSLog(@"persistentStoreCoordinator addPersistentStoreWithType error %@, %@", error, [error userInfo]);
+
+                NSLog(@"calling recursively as last act of desperation");
+                persistentStoreCoordinator = nil;
+                return [self persistentStoreCoordinator];
+                
+            }
+            else {
+                NSLog(@"persistentStoreCoordinator addPersistentStoreWithType apparently worked second attempt");
+            }
+
 		}  
+        else {
+            NSLog(@"persistentStoreCoordinator addPersistentStoreWithType succeeded");
+        }
 	}
 	
 	return persistentStoreCoordinator;
@@ -294,13 +335,19 @@
 		[cachedRequest.timestamp dateByAddingTimeInterval:
 		 [cachedRequest.expire intValue] / 2]] != cachedRequest.timestamp) {
 			
+			NSLog(@"checkForSoftUpdate running: %@", url);
+			
 			NSURLRequest *req = [NSURLRequest requestWithURL:url];
 			
 			JsonLoader *updater =
 			[[JsonLoader alloc] initWithCacheBustingRequest:req delegate:nil perma:perma];
 			
 			updater.releaseWhenDone = YES;
-		}
+	}
+	else {
+		NSLog(@"checkForSoftUpdate not running: %@", url);
+	}
+	
 }
 
 - (BOOL)cachedDataHasExpired:(NSURL*)url {
@@ -339,7 +386,8 @@
 	
     @try {
 
-        
+        NSLog(@"cacheDataForUrl called for: %@", url);
+		
         CachedRequest *cachedRequest = [self getCachedRequestForUrl:url];
         
         if(cachedRequest) {
@@ -354,16 +402,16 @@
             if([cachedRequest.expire intValue] == 0 || 
                timeIntervalSinceNowInt >
                [cachedRequest.expire intValue]) {
-                
+
                 if (![cachedRequest.perma boolValue]) {
                     
                     NSLog(@"cacheDataForUrl deleting stale cache content for: %@", url);
                     [self.managedObjectContext deleteObject:cachedRequest];
+                    return nil;
                 }
                 else {
-                    NSLog(@"url is permacached, not deleting it even though it appears stale: %@", url);
+                    NSLog(@"url is permacached, going to use cached data even though it appears stale: %@", url);
                 }
-                return nil;
             }
             else {
                 
@@ -381,6 +429,7 @@
         }
         
         if (checkForSoftUpdate) {
+			NSLog(@"checkForSoftUpdate: %@", url);
             [self checkForSoftUpdate:cachedRequest url:url perma:[cachedRequest.perma boolValue]]; 
         }
         
