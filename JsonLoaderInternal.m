@@ -123,6 +123,8 @@
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
 	
+	NSLog(@"JsonLoaderError: %@", error.localizedDescription);
+	
 	[self showError:[NSString stringWithFormat:@"Can't get internet.\n\n%@",
 					 [error localizedDescription]] json:nil];
 	
