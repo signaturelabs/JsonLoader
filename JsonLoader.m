@@ -26,10 +26,15 @@
 @interface JsonLoader ()
 
 @property (nonatomic, retain) JsonLoaderInternal *jsonLoaderInteral;
+
 @property (nonatomic, retain) NSURL *url;
+
 @property (nonatomic, assign) BOOL updateCache;
+
 @property (nonatomic, readwrite) BOOL loading;
+
 @property (nonatomic, retain) NSData *cacheData;
+
 @property (nonatomic, assign) BOOL perma;
 @property (nonatomic, assign) BOOL fastMode;
 
