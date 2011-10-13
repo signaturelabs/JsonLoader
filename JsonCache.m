@@ -20,7 +20,7 @@
 #import "CachedRequest.h"
 #import "JsonLoader.h"
 #import <CoreData/CoreData.h>
-
+#import "CJSONDeserializer.h"
 
 @interface JsonCache ()
 
@@ -448,6 +448,16 @@
 - (void)setCacheData:(NSData*)data forUrl:(NSURL*)url expire:(int)inSeconds perma:(BOOL)perma {
 	
     @try {
+		
+		// make sure this is valid json before saving in cache
+		NSError *error = nil;
+		id deserialized = [[CJSONDeserializer deserializer] deserialize:data error:&error];
+		NSString *tempDebug = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+		if (error || !deserialized) {
+			NSLog(@"setCacheData not setting cache data because json invalid for url: %@", url);
+			return;
+		}
+		
         CachedRequest *cachedRequest = [self getCachedRequestForUrl:url];
 	
         if(!cachedRequest) {
