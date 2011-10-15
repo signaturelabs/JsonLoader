@@ -230,6 +230,23 @@
     
 }
 
+- (void)jsonFailedWithAuthError:(JsonLoader *)loader {
+    
+    NSLog(@"jsonFailedWithAuthError called for url: %@", self.url);
+	
+	self.loading = NO;
+	
+	if(self.releaseWhenDone)
+		[self autorelease];
+    
+	if([self.delegate respondsToSelector:@selector(jsonFailedWithAuthError:)])
+		[self.delegate jsonFailedWithAuthError:self];
+    
+    
+}
+
+
+
 - (void)jsonCanceled {
     
     self.cacheData = nil;

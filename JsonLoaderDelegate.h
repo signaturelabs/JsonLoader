@@ -28,4 +28,6 @@
 
 - (void)jsonFailed:(JsonLoader*)loader;
 
+- (void)jsonFailedWithAuthError:(JsonLoader*)loader;
+
 @end

@@ -110,8 +110,12 @@
 
         [self dumpResponse];
         
-        if([self.delegate respondsToSelector:@selector(jsonFailed:)])
+        if([self.delegate respondsToSelector:@selector(jsonFailedWithAuthError:)]) {
+            [self.delegate jsonFailedWithAuthError:nil];
+        }
+        else if ([self.delegate respondsToSelector:@selector(jsonFailed:)]) {
             [self.delegate jsonFailed:nil];
+        }
     }
     else
         [self.delegate performSelector:@selector(didFinishLoading:)
