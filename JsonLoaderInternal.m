@@ -110,7 +110,7 @@
 
         [self dumpResponse];
         
-        if([self.delegate respondsToSelector:@selector(jsonFailedWithAuthError:)]) {
+        if(hRes.statusCode == 401 && [self.delegate respondsToSelector:@selector(jsonFailedWithAuthError:)]) {
             [self.delegate jsonFailedWithAuthError:nil];
         }
         else if ([self.delegate respondsToSelector:@selector(jsonFailed:)]) {
