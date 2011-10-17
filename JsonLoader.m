@@ -239,8 +239,12 @@
 	if(self.releaseWhenDone)
 		[self autorelease];
     
-	if([self.delegate respondsToSelector:@selector(jsonFailedWithAuthError:)])
+	if([self.delegate respondsToSelector:@selector(jsonFailedWithAuthError:)]) {
 		[self.delegate jsonFailedWithAuthError:self];
+    }
+    else if([self.delegate respondsToSelector:@selector(jsonFailed:)]) {
+        [self.delegate jsonFailed:self];
+    }
     
     
 }
