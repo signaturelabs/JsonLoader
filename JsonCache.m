@@ -452,7 +452,7 @@
 		// make sure this is valid json before saving in cache
 		NSError *error = nil;
 		id deserialized = [[CJSONDeserializer deserializer] deserialize:data error:&error];
-		NSString *tempDebug = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+//		NSString *tempDebug = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
 		if (error || !deserialized) {
 			NSLog(@"setCacheData not setting cache data because json invalid for url: %@", url);
 			return;
