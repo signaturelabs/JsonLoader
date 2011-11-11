@@ -341,7 +341,7 @@
 							 [preloadPath stringByAppendingPathComponent:component] encoding:NSUTF8StringEncoding error:nil];
 			
 			// check for junk newline ending and remove it.
-			if(str.length && [str characterAtIndex:str.length - 1] == '\n')
+			while(str.length && [str characterAtIndex:str.length - 1] == '\n')
 				str = [str substringToIndex:str.length - 1];
             
             const char *cStr = [str UTF8String];
