@@ -275,6 +275,8 @@
 
 - (void)didFinishLoading:(NSData*)jsonData {
 	
+    self.retainedObject = nil;
+	
 	self.loading = NO;
 	
 	NSLog(@"JsonLoader#didFinishLoading called for %@", [self url]);
@@ -321,6 +323,7 @@
 	if(!errorStr && [dictionary isMemberOfClass:[NSDictionary class]])
 		errorStr = [dictionary objectForKey:@"error"];
 	
+	//READ ME!!
     // This else if chain must be the last line in function because delegates can release us.
 	if(!errorStr && dictionary) {
         
@@ -340,8 +343,8 @@
         
 		[self autorelease];
     }
-    
-    self.retainedObject = nil;
+	
+	// Scroll up to read me first!!
 }
 
 + (void)installPreloadedCachedJson:(NSString*)preloadPath {
