@@ -46,7 +46,7 @@
 
 @implementation JsonLoader
 
-@synthesize delegate, loading, cacheData, perma, fastMode, releaseWhenDone;
+@synthesize delegate, retainedObject, loading, cacheData, perma, fastMode, releaseWhenDone;
 @synthesize jsonLoaderInteral, url, updateCache;
 
 - (id)initWithRequest:(NSURLRequest*)request delegate:(id)del {
@@ -169,12 +169,22 @@
     self.cacheData = nil;
 }
 
+- (void)setRetainedObject:(NSObject*)obj {
+    
+    [obj retain];
+    [retainedObject autorelease];
+    
+    retainedObject = obj;
+}
+
 - (void)jsonLoadedSuccessfully:(id)dictionary {
 	
 	NSLog(@"jsonLoadedSuccessfully: %@", self.url);
 	
 	self.loading = NO;
 	
+    self.retainedObject = nil;
+    
     if(self.releaseWhenDone)
 		[self autorelease];
 	
@@ -202,6 +212,8 @@
 	
 	self.loading = NO;
 	
+    self.retainedObject = nil;
+    
 	if(self.releaseWhenDone)
 		[self autorelease];
     
@@ -227,8 +239,6 @@
         if([self.delegate respondsToSelector:@selector(jsonFailed:)])
             [self.delegate jsonFailed:self];
     }
-
-    
 }
 
 - (void)jsonFailedWithAuthError:(JsonLoader *)loader {
@@ -237,6 +247,8 @@
 	
 	self.loading = NO;
 	
+    self.retainedObject = nil;
+    
 	if(self.releaseWhenDone)
 		[self autorelease];
     
@@ -246,15 +258,16 @@
     else if([self.delegate respondsToSelector:@selector(jsonFailed:)]) {
         [self.delegate jsonFailed:self];
     }
-    
-    
 }
-
-
 
 - (void)jsonCanceled {
     
     self.cacheData = nil;
+    
+    if([self.delegate respondsToSelector:@selector(jsonCanceled)])
+        [self.delegate jsonCanceled];
+    
+    self.retainedObject = nil;
 	
 	if(self.releaseWhenDone)
 		[self release];
@@ -327,6 +340,8 @@
         
 		[self autorelease];
     }
+    
+    self.retainedObject = nil;
 }
 
 + (void)installPreloadedCachedJson:(NSString*)preloadPath {
@@ -395,6 +410,8 @@
 - (void)dealloc {
 	
 	self.releaseWhenDone = NO;
+    
+    self.retainedObject = nil;
 	
 	[self.jsonLoaderInteral cancel];
 	self.jsonLoaderInteral.delegate = nil;

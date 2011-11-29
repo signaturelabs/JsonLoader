@@ -30,4 +30,6 @@
 
 - (void)jsonFailedWithAuthError:(JsonLoader*)loader;
 
+- (void)jsonCanceled;
+
 @end

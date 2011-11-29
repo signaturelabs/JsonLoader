@@ -26,6 +26,11 @@
 
 @property (nonatomic, assign) id<JsonLoaderDelegate> delegate;
 
+/// This object will be retained until the operation is finished,
+/// failed or canceled etc.  It's a convience method for the user
+/// and has no impact on the actual json loader internals.
+@property (nonatomic, retain) NSObject *retainedObject;
+
 @property (nonatomic, readonly) BOOL loading;
 
 @property (nonatomic, assign) BOOL releaseWhenDone;
