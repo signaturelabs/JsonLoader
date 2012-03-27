@@ -348,6 +348,8 @@
 }
 
 + (void)installPreloadedCachedJson:(NSString*)preloadPath {
+    
+    NSLog(@"Install PreloadedCached Json. Preload path: %@", preloadPath);
 	
     NSFileManager *mng = [NSFileManager defaultManager];
     
@@ -379,11 +381,12 @@
             
             NSURL *url = [NSURL URLWithString:str];
             
-            if([str.pathExtension isEqual:@"png"]) {
+            // for images, just copy them to destination directory
+            if([str.pathExtension isEqual:@"png"] || [str.pathExtension isEqual:@"jpg"]) {
                 
                 NSString *cachePath =
                 [preloadPath stringByAppendingPathComponent:
-                 [md5.lowercaseString stringByAppendingPathExtension:@"png"]];
+                 [md5.lowercaseString stringByAppendingPathExtension:str.pathExtension]];
                 
                 NSString *filename = [IFImageView getStoreageFilename:url];
                 
@@ -391,6 +394,8 @@
                     [mng copyItemAtPath:cachePath toPath:filename error:nil];
             }
             else {
+                
+                // everything else, we assume to be json and save metadata about cache object in db 
                 
                 // Skip it if it's already in the cache.
                 if([[JsonCache shared] cacheDataForUrl:url checkForSoftUpdate:NO])
@@ -400,11 +405,12 @@
                 [preloadPath stringByAppendingPathComponent:
                  [md5.lowercaseString stringByAppendingPathExtension:@"cache"]];
                 
-                NSLog(@"Setting intial cache data for url: %@", url);
+                NSLog(@"Saving json cache object in db for url: %@ and md5: %@", url, md5);
                 
                 NSData *data = [NSData dataWithContentsOfFile:cachePath];
                 
                 [[JsonCache shared] setCacheData:data forUrl:url expire:-1 perma:YES];
+                
             }
         }
     }
