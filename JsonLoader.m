@@ -178,9 +178,7 @@
 }
 
 - (void)jsonLoadedSuccessfully:(id)dictionary {
-	
-	NSLog(@"jsonLoadedSuccessfully: %@", self.url);
-	
+		
 	self.loading = NO;
 	
     self.retainedObject = nil;
@@ -278,9 +276,7 @@
     self.retainedObject = nil;
 	
 	self.loading = NO;
-	
-	NSLog(@"JsonLoader#didFinishLoading called for %@", [self url]);
-	
+		
 	if(self.updateCache) {
 		
 		int maxAge = -1;

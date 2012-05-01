@@ -42,9 +42,7 @@
 		self.delegate = del;
 		
 		if ([Util isNotEmpty:request.URL]) {
-		
-			DLog(@"jsonLoaderInternal.initWithRequest called with url: %@", request.URL);
-			
+					
 			self.connection = [NSURLConnection
 							   connectionWithRequest:request
 							   delegate:self];
